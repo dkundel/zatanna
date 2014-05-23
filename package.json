@@ -1,0 +1,44 @@
+{
+  "name": "zatanna",
+  "version": "0.0.1",
+  "description": "Extension of Ace designed to allow mobile programming for CodeCombat",
+  "main": "dist/zatanna.min.js",
+  "dependencies": {
+    "browserify": "~4.1.5",
+    "grunt": "~0.4.5",
+    "grunt-browserify": "~2.1.0",
+    "grunt-coffeelint": "~0.0.10",
+    "grunt-contrib-coffee": "~0.10.1",
+    "grunt-contrib-uglify": "~0.4.0",
+    "grunt-contrib-watch": "~0.6.1",
+    "tv4": "^1.0.18"
+  },
+  "devDependencies": {
+    "grunt-contrib-coffee": "^0.10.1",
+    "grunt-coffeelint": "0.0.10",
+    "grunt-contrib-uglify": "^0.4.0",
+    "grunt": "^0.4.5",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-browserify": "^2.1.0"
+  },
+  "scripts": {
+    "test": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dkundel/zatanna.git"
+  },
+  "keywords": [
+    "ace",
+    "zatanna",
+    "codecombat",
+    "mobile",
+    "programming"
+  ],
+  "author": "Dominik Kundel <dominik.kundel@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dkundel/zatanna/issues"
+  },
+  "homepage": "https://github.com/dkundel/zatanna"
+}

@@ -1,0 +1,32 @@
+{
+  "name": "zatanna",
+  "version": "0.0.1",
+  "homepage": "https://github.com/dkundel/zatanna",
+  "authors": [
+    "Dominik Kundel <dominik.kundel@gmail.com>"
+  ],
+  "description": "Extension of Ace designed to allow mobile programming for CodeCombat",
+  "main": "dist/zatanna.min.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "ace",
+    "zatanna",
+    "codecombat",
+    "mobile",
+    "programming"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "ace-builds": "~1.1.3"
+  }
+}
