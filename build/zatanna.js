@@ -57,12 +57,11 @@
   optionsValidator = require('./validators/options');
 
   module.exports = Zatanna = (function() {
-    function Zatanna(aceInstance, options) {
+    function Zatanna(aceEditor, options) {
       var defaultsCopy, validationResult;
-      this.ace = aceInstance;
-      this.ace.require('ace/ext/language_tools');
-      this.editor = this.ace.editor('editor');
-      this.snippetManager = this.ace.require('ace/snippets').snippetManager;
+      ace.require('ace/ext/language_tools');
+      this.editor = aceEditor;
+      this.snippetManager = ace.require('ace/snippets').snippetManager;
       if (options == null) {
         options = {};
       }

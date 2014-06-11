@@ -3,11 +3,10 @@ optionsValidator = require './validators/options'
 
 module.exports = class Zatanna
 
-  constructor: (aceInstance, options) ->
-    @ace = aceInstance
-    @ace.require 'ace/ext/language_tools'
-    @editor = @ace.editor 'editor'
-    @snippetManager = @ace.require('ace/snippets').snippetManager
+  constructor: (aceEditor, options) ->
+    ace.require 'ace/ext/language_tools'
+    @editor = aceEditor
+    @snippetManager = ace.require('ace/snippets').snippetManager
 
     options ?= {}
     validationResult = optionsValidator options
