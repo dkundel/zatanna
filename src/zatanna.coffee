@@ -4,19 +4,21 @@ optionsValidator = require './validators/options'
 module.exports = class Zatanna
 
   constructor: (aceEditor, options) ->
-    ace.require 'ace/ext/language_tools'
     @editor = aceEditor
-    @snippetManager = ace.require('ace/snippets').snippetManager
+    config = ace.require 'ace/config'
 
     options ?= {}
     validationResult = optionsValidator options
-    unless valudationResult
+    unless validationResult
       throw new Error "Invalid Zatanna options: " + JSON.stringify(validationResult.errors, null, 4)
 
     defaultsCopy = _.extend {}, defaults
     @options = _.merge defaultsCopy, options
 
     @setAceOptions()
+
+    ace.config.loadModule 'ace/ext/language_tools', () =>
+      @snippetManager = ace.require('ace/snippets').snippetManager
 
   setAceOptions: () ->
     @editor.setOptions {
@@ -27,7 +29,6 @@ module.exports = class Zatanna
 
   addSnippets: (snippets) ->
     snippetModulePath = 'ace/snippets/' + @options.language
-    config = ace.require 'ace/config'
     ace.config.loadModule snippetModulePath, (m) => 
       if m?        
         @snippetManager.files[@options.language] = m 

@@ -58,20 +58,24 @@
 
   module.exports = Zatanna = (function() {
     function Zatanna(aceEditor, options) {
-      var defaultsCopy, validationResult;
-      ace.require('ace/ext/language_tools');
+      var config, defaultsCopy, validationResult;
       this.editor = aceEditor;
-      this.snippetManager = ace.require('ace/snippets').snippetManager;
+      config = ace.require('ace/config');
       if (options == null) {
         options = {};
       }
       validationResult = optionsValidator(options);
-      if (!valudationResult) {
+      if (!validationResult) {
         throw new Error("Invalid Zatanna options: " + JSON.stringify(validationResult.errors, null, 4));
       }
       defaultsCopy = _.extend({}, defaults);
       this.options = _.merge(defaultsCopy, options);
       this.setAceOptions();
+      ace.config.loadModule('ace/ext/language_tools', (function(_this) {
+        return function() {
+          return _this.snippetManager = ace.require('ace/snippets').snippetManager;
+        };
+      })(this));
     }
 
     Zatanna.prototype.setAceOptions = function() {
@@ -83,9 +87,8 @@
     };
 
     Zatanna.prototype.addSnippets = function(snippets) {
-      var config, snippetModulePath;
+      var snippetModulePath;
       snippetModulePath = 'ace/snippets/' + this.options.language;
-      config = ace.require('ace/config');
       return ace.config.loadModule(snippetModulePath, (function(_this) {
         return function(m) {
           var s, _i, _len;
