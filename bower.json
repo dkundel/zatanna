@@ -6,7 +6,7 @@
     "Dominik Kundel <dominik.kundel@gmail.com>"
   ],
   "description": "Extension of Ace designed to allow mobile programming for CodeCombat",
-  "main": "dist/zatanna.min.js",
+  "main": "build/zatanna.min.js",
   "moduleType": [
     "globals"
   ],
@@ -27,6 +27,5 @@
     "tests"
   ],
   "dependencies": {
-    "ace-builds": "~1.1.3"
   }
 }

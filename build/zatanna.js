@@ -3,7 +3,10 @@
   var defaults;
 
   module.exports = defaults = {
-    liveCompletion: true
+    basic: true,
+    snippets: true,
+    liveCompletion: true,
+    language: 'javascript'
   };
 
 }).call(this);
@@ -19,10 +22,25 @@
       "type": "object",
       additionalProperties: false,
       properties: {
+        basic: {
+          type: 'boolean',
+          required: false,
+          description: 'Basic autocompletion based on keywords used in code'
+        },
+        snippets: {
+          type: 'boolean',
+          required: false,
+          description: 'Offers code snippets for autocomplete'
+        },
         liveCompletion: {
           type: 'boolean',
           required: false,
           description: 'Triggers autocomplete while typing'
+        },
+        language: {
+          type: 'string',
+          required: false,
+          description: 'Language to load default snippets'
         }
       }
     });
@@ -42,6 +60,9 @@
     function Zatanna(aceInstance, options) {
       var defaultsCopy, validationResult;
       this.ace = aceInstance;
+      this.ace.require('ace/ext/language_tools');
+      this.editor = this.ace.editor('editor');
+      this.snippetManager = this.ace.require('ace/snippets').snippetManager;
       if (options == null) {
         options = {};
       }
@@ -51,7 +72,43 @@
       }
       defaultsCopy = _.extend({}, defaults);
       this.options = _.merge(defaultsCopy, options);
+      this.setAceOptions();
     }
+
+    Zatanna.prototype.setAceOptions = function() {
+      return this.editor.setOptions({
+        enableLiveAutocompletion: this.options.liveCompletion,
+        enableBasicAutocompletion: this.options.basic,
+        enableSnippets: this.options.snippets
+      });
+    };
+
+    Zatanna.prototype.addSnippets = function(snippets) {
+      var config, snippetModulePath;
+      snippetModulePath = 'ace/snippets/' + this.options.language;
+      config = ace.require('ace/config');
+      return ace.config.loadModule(snippetModulePath, (function(_this) {
+        return function(m) {
+          var s, _i, _len;
+          if (m != null) {
+            _this.snippetManager.files[_this.options.language] = m;
+            m.snippets = _this.snippetManager.parseSnippetFile(m.snippetText);
+            for (_i = 0, _len = snippets.length; _i < _len; _i++) {
+              s = snippets[_i];
+              m.snippets.push(s);
+            }
+            return _this.snippetManager.register(m.snippets, m.scope);
+          }
+        };
+      })(this));
+    };
+
+    Zatanna.prototype.setLiveCompletion = function(val) {
+      if (val === true || val === false) {
+        this.options.liveCompletion = val;
+        return this.setAceOptions();
+      }
+    };
 
     return Zatanna;
 
