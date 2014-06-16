@@ -70,37 +70,44 @@
       }
       defaultsCopy = _.extend({}, defaults);
       this.options = _.merge(defaultsCopy, options);
-      this.setAceOptions();
       ace.config.loadModule('ace/ext/language_tools', (function(_this) {
         return function() {
-          return _this.snippetManager = ace.require('ace/snippets').snippetManager;
+          _this.snippetManager = ace.require('ace/snippets').snippetManager;
+          return _this.setAceOptions();
         };
       })(this));
     }
 
     Zatanna.prototype.setAceOptions = function() {
-      return this.editor.setOptions({
-        enableLiveAutocompletion: this.options.liveCompletion,
-        enableBasicAutocompletion: this.options.basic,
-        enableSnippets: this.options.snippets
-      });
+      var aceOptions;
+      aceOptions = {
+        'enableLiveAutocompletion': this.options.liveCompletion,
+        'enableBasicAutocompletion': this.options.basic,
+        'enableSnippets': this.options.snippets
+      };
+      return this.editor.setOptions(aceOptions);
     };
 
-    Zatanna.prototype.addSnippets = function(snippets) {
-      var snippetModulePath;
-      snippetModulePath = 'ace/snippets/' + this.options.language;
-      return ace.config.loadModule(snippetModulePath, (function(_this) {
-        return function(m) {
-          var s, _i, _len;
-          if (m != null) {
-            _this.snippetManager.files[_this.options.language] = m;
-            m.snippets = _this.snippetManager.parseSnippetFile(m.snippetText);
-            for (_i = 0, _len = snippets.length; _i < _len; _i++) {
-              s = snippets[_i];
-              m.snippets.push(s);
+    Zatanna.prototype.addSnippets = function(snippets, language) {
+      return ace.config.loadModule('ace/ext/language_tools', (function(_this) {
+        return function() {
+          var snippetModulePath;
+          _this.snippetManager = ace.require('ace/snippets').snippetManager;
+          snippetModulePath = 'ace/snippets/' + language;
+          return ace.config.loadModule(snippetModulePath, function(m) {
+            var s, _i, _len;
+            if (m != null) {
+              _this.snippetManager.files[_this.options.language] = m;
+              _this.snippetManager.unregister(m.snippets);
+              m.snippets = _this.snippetManager.parseSnippetFile(m.snippetText);
+              console.log('snippets!!!', m);
+              for (_i = 0, _len = snippets.length; _i < _len; _i++) {
+                s = snippets[_i];
+                m.snippets.push(s);
+              }
+              return _this.snippetManager.register(m.snippets);
             }
-            return _this.snippetManager.register(m.snippets, m.scope);
-          }
+          });
         };
       })(this));
     };
