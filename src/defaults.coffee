@@ -3,3 +3,7 @@ module.exports = defaults =
   snippets: true
   liveCompletion: true
   language: 'javascript'
+  completers: 
+    keywords: true
+    snippets: true
+    text: true

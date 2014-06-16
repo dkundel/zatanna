@@ -6,7 +6,12 @@
     basic: true,
     snippets: true,
     liveCompletion: true,
-    language: 'javascript'
+    language: 'javascript',
+    completers: {
+      keywords: true,
+      snippets: true,
+      text: true
+    }
   };
 
 }).call(this);
@@ -41,6 +46,27 @@
           type: 'string',
           required: false,
           description: 'Language to load default snippets'
+        },
+        completers: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            snippets: {
+              type: 'boolean',
+              required: false,
+              description: 'Show snippets suggestions in autocomplete popup'
+            },
+            keywords: {
+              type: 'boolean',
+              required: false,
+              description: 'Show keywords suggestions in autocomplete popup'
+            },
+            text: {
+              type: 'boolean',
+              required: false,
+              description: 'Show text content suggestions in autocomplete popup'
+            }
+          }
         }
       }
     });
@@ -73,7 +99,9 @@
       ace.config.loadModule('ace/ext/language_tools', (function(_this) {
         return function() {
           _this.snippetManager = ace.require('ace/snippets').snippetManager;
-          return _this.setAceOptions();
+          _this.setAceOptions();
+          _this.copyCompleters();
+          return _this.activateCompleter();
         };
       })(this));
     }
@@ -88,6 +116,45 @@
       return this.editor.setOptions(aceOptions);
     };
 
+    Zatanna.prototype.copyCompleters = function() {
+      var _ref;
+      this.completers = {};
+      this.completers.snippets = {
+        pos: 0
+      };
+      this.completers.text = {
+        pos: 1
+      };
+      this.completers.keywords = {
+        pos: 2
+      };
+      return _ref = this.editor.completers, this.completers.snippets.comp = _ref[0], this.completers.text.comp = _ref[1], this.completers.keywords.comp = _ref[2], _ref;
+    };
+
+    Zatanna.prototype.activateCompleter = function(comp) {
+      var comparator, type, _ref, _results;
+      if (Array.isArray(comp)) {
+        return this.editor.completers = comp;
+      } else if (typeof comp === 'string') {
+        if (this.completers[comp] != null) {
+          return this.editor.completers.splice(this.completers[comp].pos, 0, this.completers[comp].comp);
+        }
+      } else {
+        this.editor.completers = [];
+        _ref = this.completers;
+        _results = [];
+        for (type in _ref) {
+          comparator = _ref[type];
+          if (this.options.completers[type] === true) {
+            _results.push(this.activateCompleter(type));
+          } else {
+            _results.push(void 0);
+          }
+        }
+        return _results;
+      }
+    };
+
     Zatanna.prototype.addSnippets = function(snippets, language) {
       return ace.config.loadModule('ace/ext/language_tools', (function(_this) {
         return function() {
@@ -100,7 +167,6 @@
               _this.snippetManager.files[_this.options.language] = m;
               _this.snippetManager.unregister(m.snippets);
               m.snippets = _this.snippetManager.parseSnippetFile(m.snippetText);
-              console.log('snippets!!!', m);
               for (_i = 0, _len = snippets.length; _i < _len; _i++) {
                 s = snippets[_i];
                 m.snippets.push(s);

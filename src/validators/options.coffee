@@ -21,3 +21,19 @@ module.exports = (options) ->
         type: 'string'
         required: false
         description: 'Language to load default snippets'
+      completers:
+        type: 'object'
+        additionalProperties: false
+        properties:
+          snippets:
+            type: 'boolean'
+            required: false
+            description: 'Show snippets suggestions in autocomplete popup'
+          keywords:
+            type: 'boolean'
+            required: false
+            description: 'Show keywords suggestions in autocomplete popup'
+          text:
+            type: 'boolean'
+            required: false
+            description: 'Show text content suggestions in autocomplete popup'
