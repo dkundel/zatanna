@@ -1,4 +1,44 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+
+/*
+  This is essentially a copy from the snippet completer from Ace's ext/language-tools.js
+ */
+
+(function() {
+  module.exports = function(SnippetManager) {
+    return {
+      getCompletions: function(editor, session, pos, prefix, callback) {
+        var completions, snippetMap;
+        snippetMap = SnippetManager.snippetMap;
+        completions = [];
+        SnippetManager.getActiveScopes(editor).forEach(function(scope) {
+          var caption, i, s, snippets, _results;
+          snippets = snippetMap[scope] || [];
+          i = snippets.length;
+          _results = [];
+          while (i--) {
+            s = snippets[i];
+            caption = s.name || s.tabTrigger;
+            if (!caption) {
+              continue;
+            }
+            _results.push(completions.push({
+              caption: caption,
+              snippet: s.content,
+              score: 999,
+              meta: (s.tabTrigger && !s.name ? s.tabTrigger + '\u21E5' : 'snippets')
+            }));
+          }
+          return _results;
+        }, this);
+        return callback(null, completions);
+      }
+    };
+  };
+
+}).call(this);
+
+},{}],2:[function(require,module,exports){
 (function() {
   var defaults;
 
@@ -16,7 +56,7 @@
 
 }).call(this);
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 (function() {
   var tv4;
 
@@ -74,7 +114,7 @@
 
 }).call(this);
 
-},{"tv4":4}],3:[function(require,module,exports){
+},{"tv4":5}],4:[function(require,module,exports){
 (function() {
   var Zatanna, defaults, optionsValidator;
 
@@ -128,7 +168,8 @@
       this.completers.keywords = {
         pos: 2
       };
-      return _ref = this.editor.completers, this.completers.snippets.comp = _ref[0], this.completers.text.comp = _ref[1], this.completers.keywords.comp = _ref[2], _ref;
+      _ref = this.editor.completers, this.completers.snippets.comp = _ref[0], this.completers.text.comp = _ref[1], this.completers.keywords.comp = _ref[2];
+      return this.completers.snippets.comp = require('./completers/snippets')(this.snippetManager);
     };
 
     Zatanna.prototype.activateCompleter = function(comp) {
@@ -199,7 +240,7 @@
 
 }).call(this);
 
-},{"./defaults":1,"./validators/options":2}],4:[function(require,module,exports){
+},{"./completers/snippets":1,"./defaults":2,"./validators/options":3}],5:[function(require,module,exports){
 /*
 Author: Geraint Luff and others
 Year: 2013
@@ -1587,4 +1628,4 @@ tv4.tv4 = tv4;
 return tv4; // used by _header.js to globalise.
 
 }));
-},{}]},{},[3])
+},{}]},{},[4])

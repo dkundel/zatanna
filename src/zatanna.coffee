@@ -40,6 +40,8 @@ module.exports = class Zatanna
 
     [@completers.snippets.comp, @completers.text.comp, @completers.keywords.comp] = @editor.completers
 
+    @completers.snippets.comp = require('./completers/snippets') @snippetManager
+
   activateCompleter: (comp) ->
     if Array.isArray comp
       @editor.completers = comp
