@@ -40,7 +40,7 @@ module.exports = class Zatanna
 
     [@completers.snippets.comp, @completers.text.comp, @completers.keywords.comp] = @editor.completers
 
-    @completers.snippets.comp = require('./completers/snippets') @snippetManager
+    @completers.snippets.comp = require('./completers/snippets') @snippetManager # Replace the default snippet completer with our custom one
 
   activateCompleter: (comp) ->
     if Array.isArray comp
@@ -61,7 +61,7 @@ module.exports = class Zatanna
       snippetModulePath = 'ace/snippets/' + language
       ace.config.loadModule snippetModulePath, (m) => 
         if m?        
-          @snippetManager.files[@options.language] = m 
+          @snippetManager.files[language] = m 
           @snippetManager.unregister m.snippets
           m.snippets = @snippetManager.parseSnippetFile m.snippetText
           m.snippets.push s for s in snippets
@@ -71,6 +71,39 @@ module.exports = class Zatanna
     if val is true or val is false
       @options.liveCompletion = val
       @setAceOptions()
+
+  set: (setting, value) ->
+    switch setting
+      when 'snippets' or 'completers.snippets'
+        return unless typeof value is 'boolean'
+        @options.snippets = value
+        @options.completers.snippets = value
+        @setAceOptions()
+        @activateCompleter 'snippets'
+      when 'basic'
+        return unless typeof value is 'boolean'
+        @options.basic = value
+        @setAceOptions()
+        @activateCompleter()
+      when 'liveCompletion'
+        return unless typeof value is 'boolean'
+        @options.liveCompletion = value
+        @setAceOptions()
+        @activateCompleter()
+      when 'language'
+        return unless typeof value is 'string'
+        @options.language = value
+        @setAceOptions()
+        @activateCompleter()
+      when 'completers.keywords'
+        return unless typeof value is 'boolean'
+        @options.completers.keywords = value
+        @activateCompleter()
+      when 'completers.text'
+        return unless typeof value is 'boolean'
+        @options.completers.text = value
+        @activateCompleter()
+    return
 
 self.Zatanna = Zatanna if self?
 window.Zatanna = Zatanna if window?

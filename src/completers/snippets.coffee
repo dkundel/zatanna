@@ -1,5 +1,7 @@
 ###
   This is essentially a copy from the snippet completer from Ace's ext/language-tools.js
+  However this completer assigns a score to the snippets to ensure that snippet suggestions are
+  treated better in the autocomplete than local values
 ###
 
 module.exports = (SnippetManager) ->

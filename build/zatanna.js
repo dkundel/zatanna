@@ -2,6 +2,8 @@
 
 /*
   This is essentially a copy from the snippet completer from Ace's ext/language-tools.js
+  However this completer assigns a score to the snippets to ensure that snippet suggestions are
+  treated better in the autocomplete than local values
  */
 
 (function() {
@@ -205,7 +207,7 @@
           return ace.config.loadModule(snippetModulePath, function(m) {
             var s, _i, _len;
             if (m != null) {
-              _this.snippetManager.files[_this.options.language] = m;
+              _this.snippetManager.files[language] = m;
               _this.snippetManager.unregister(m.snippets);
               m.snippets = _this.snippetManager.parseSnippetFile(m.snippetText);
               for (_i = 0, _len = snippets.length; _i < _len; _i++) {
@@ -223,6 +225,57 @@
       if (val === true || val === false) {
         this.options.liveCompletion = val;
         return this.setAceOptions();
+      }
+    };
+
+    Zatanna.prototype.set = function(setting, value) {
+      switch (setting) {
+        case 'snippets' || 'completers.snippets':
+          if (typeof value !== 'boolean') {
+            return;
+          }
+          this.options.snippets = value;
+          this.options.completers.snippets = value;
+          this.setAceOptions();
+          this.activateCompleter('snippets');
+          break;
+        case 'basic':
+          if (typeof value !== 'boolean') {
+            return;
+          }
+          this.options.basic = value;
+          this.setAceOptions();
+          this.activateCompleter();
+          break;
+        case 'liveCompletion':
+          if (typeof value !== 'boolean') {
+            return;
+          }
+          this.options.liveCompletion = value;
+          this.setAceOptions();
+          this.activateCompleter();
+          break;
+        case 'language':
+          if (typeof value !== 'string') {
+            return;
+          }
+          this.options.language = value;
+          this.setAceOptions();
+          this.activateCompleter();
+          break;
+        case 'completers.keywords':
+          if (typeof value !== 'boolean') {
+            return;
+          }
+          this.options.completers.keywords = value;
+          this.activateCompleter();
+          break;
+        case 'completers.text':
+          if (typeof value !== 'boolean') {
+            return;
+          }
+          this.options.completers.text = value;
+          this.activateCompleter();
       }
     };
 
