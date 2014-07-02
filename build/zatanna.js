@@ -199,22 +199,29 @@
     };
 
     Zatanna.prototype.addSnippets = function(snippets, language) {
+      this.options.language = language;
       return ace.config.loadModule('ace/ext/language_tools', (function(_this) {
         return function() {
           var snippetModulePath;
           _this.snippetManager = ace.require('ace/snippets').snippetManager;
           snippetModulePath = 'ace/snippets/' + language;
           return ace.config.loadModule(snippetModulePath, function(m) {
-            var s, _i, _len;
+            var s, _i, _len, _ref;
             if (m != null) {
               _this.snippetManager.files[language] = m;
-              _this.snippetManager.unregister(m.snippets);
+              if (((_ref = m.snippets) != null ? _ref.length : void 0) > 0) {
+                _this.snippetManager.unregister(m.snippets);
+              }
+              if (_this.oldSnippets != null) {
+                _this.snippetManager.unregister(_this.oldSnippets);
+              }
               m.snippets = _this.snippetManager.parseSnippetFile(m.snippetText);
               for (_i = 0, _len = snippets.length; _i < _len; _i++) {
                 s = snippets[_i];
                 m.snippets.push(s);
               }
-              return _this.snippetManager.register(m.snippets);
+              _this.snippetManager.register(m.snippets);
+              return _this.oldSnippets = m.snippets;
             }
           });
         };

@@ -56,16 +56,19 @@ module.exports = class Zatanna
 
 
   addSnippets: (snippets, language) ->
+    @options.language = language
     ace.config.loadModule 'ace/ext/language_tools', () =>
       @snippetManager = ace.require('ace/snippets').snippetManager
       snippetModulePath = 'ace/snippets/' + language
       ace.config.loadModule snippetModulePath, (m) => 
         if m?        
           @snippetManager.files[language] = m 
-          @snippetManager.unregister m.snippets
+          @snippetManager.unregister m.snippets if m.snippets?.length > 0
+          @snippetManager.unregister @oldSnippets if @oldSnippets?
           m.snippets = @snippetManager.parseSnippetFile m.snippetText
           m.snippets.push s for s in snippets
           @snippetManager.register m.snippets
+          @oldSnippets = m.snippets
 
   setLiveCompletion: (val) ->
     if val is true or val is false
