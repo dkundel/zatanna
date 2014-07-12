@@ -77,7 +77,7 @@
   splitRegex = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w]+/;
 
   module.exports = function(editor) {
-    var bgTokenizer, dictionary, getCurrentWord, handleTokenUpdate, highlightRules, tokenizer;
+    var bgTokenizer, dictionary, getCurrentWord, handleSpaceKey, handleTokenUpdate, highlightRules, tokenizer;
     dictionary = [];
     getCurrentWord = function(doc, pos) {
       var text, textBefore;
@@ -111,12 +111,24 @@
         return el.value;
       });
     };
+    handleSpaceKey = {
+      name: 'updateTokens',
+      bindKey: 'Space',
+      exec: function(e) {
+        var lastRow;
+        console.log('YES');
+        editor.insert(' ');
+        lastRow = editor.getSession().getLength();
+        return bgTokenizer.fireUpdateEvent(0, lastRow);
+      }
+    };
     highlightRules = new (editor.getSession().getMode().HighlightRules)();
     tokenizer = new Tokenizer(highlightRules.getRules());
     bgTokenizer = new BackgroundTokenizer(tokenizer, editor);
     bgTokenizer.on('update', handleTokenUpdate);
     bgTokenizer.setDocument(editor.getSession().getDocument());
     bgTokenizer.start(0);
+    editor.commands.addCommand(handleSpaceKey);
     return {
       getCompletions: function(editor, session, pos, prefix, callback) {
         var completions, noLines, suggestion, word, _i, _len;

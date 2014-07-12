@@ -29,13 +29,24 @@ module.exports = (editor) ->
     dictionary = _.uniq newDictionary, (el) ->
       el.value
 
+  handleSpaceKey = 
+    name: 'updateTokens'
+    bindKey: 'Space'
+    exec: (e) ->
+      editor.insert ' '
+      lastRow = editor.getSession().getLength()
+      bgTokenizer.fireUpdateEvent 0, lastRow
+
+
   highlightRules = new (editor.getSession().getMode().HighlightRules)()
   tokenizer = new Tokenizer highlightRules.getRules()
   bgTokenizer = new BackgroundTokenizer tokenizer, editor
   bgTokenizer.on 'update', handleTokenUpdate
   bgTokenizer.setDocument editor.getSession().getDocument()
   bgTokenizer.start(0)
-  
+
+  editor.commands.addCommand handleSpaceKey
+
   getCompletions: (editor, session, pos, prefix, callback) ->
     completions = []
     noLines = session.getLength()
