@@ -28,3 +28,6 @@ bower_components
 lib/**/*.js
 
 .DS_Store
+
+*.sublime-project
+*.sublime-workspace
