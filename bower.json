@@ -1,6 +1,6 @@
 {
   "name": "zatanna",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "homepage": "https://github.com/dkundel/zatanna",
   "authors": [
     "Dominik Kundel <dominik.kundel@gmail.com>"
@@ -26,6 +26,5 @@
     "test",
     "tests"
   ],
-  "dependencies": {
-  }
+  "dependencies": {}
 }
