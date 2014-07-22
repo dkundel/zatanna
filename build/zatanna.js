@@ -62,22 +62,18 @@
 
 },{"fuzzaldrin":7}],2:[function(require,module,exports){
 (function() {
-  var BackgroundTokenizer, Range, Tokenizer, checkToken, fuzzaldrin, splitRegex, _;
+  var Range, checkToken, fuzzaldrin, splitRegex, _;
 
   _ = require('lodash');
 
   fuzzaldrin = require('fuzzaldrin');
 
-  Tokenizer = ace.require('ace/tokenizer').Tokenizer;
-
-  BackgroundTokenizer = ace.require('ace/background_tokenizer').BackgroundTokenizer;
-
   Range = ace.require('ace/range').Range;
 
   splitRegex = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w]+/;
 
-  module.exports = function(editor) {
-    var bgTokenizer, dictionary, getCurrentWord, handleSpaceKey, handleTokenUpdate, highlightRules, tokenizer;
+  module.exports = function(editor, bgTokenizer) {
+    var dictionary, getCurrentWord, handleTokenUpdate;
     dictionary = [];
     getCurrentWord = function(doc, pos) {
       var text, textBefore;
@@ -91,8 +87,9 @@
     };
     handleTokenUpdate = function(e) {
       var newDictionary, noLines, row, tok, tokens, _i, _j, _len;
+      bgTokenizer.setDocument(editor.getSession().getDocument());
       newDictionary = [];
-      noLines = editor.getSession().getDocument().getLength();
+      noLines = e.data.last;
       for (row = _i = 0; 0 <= noLines ? _i < noLines : _i > noLines; row = 0 <= noLines ? ++_i : --_i) {
         tokens = bgTokenizer.getTokens(row);
         for (_j = 0, _len = tokens.length; _j < _len; _j++) {
@@ -111,24 +108,7 @@
         return el.value;
       });
     };
-    handleSpaceKey = {
-      name: 'updateTokens',
-      bindKey: 'Space',
-      exec: function(e) {
-        var lastRow;
-        console.log('YES');
-        editor.insert(' ');
-        lastRow = editor.getSession().getLength();
-        return bgTokenizer.fireUpdateEvent(0, lastRow);
-      }
-    };
-    highlightRules = new (editor.getSession().getMode().HighlightRules)();
-    tokenizer = new Tokenizer(highlightRules.getRules());
-    bgTokenizer = new BackgroundTokenizer(tokenizer, editor);
     bgTokenizer.on('update', handleTokenUpdate);
-    bgTokenizer.setDocument(editor.getSession().getDocument());
-    bgTokenizer.start(0);
-    editor.commands.addCommand(handleSpaceKey);
     return {
       getCompletions: function(editor, session, pos, prefix, callback) {
         var completions, noLines, suggestion, word, _i, _len;
@@ -240,15 +220,19 @@
 
 },{"tv4":11}],5:[function(require,module,exports){
 (function() {
-  var Zatanna, defaults, optionsValidator;
+  var BackgroundTokenizer, Tokenizer, Zatanna, defaults, optionsValidator;
 
   defaults = require('./defaults');
 
   optionsValidator = require('./validators/options');
 
+  Tokenizer = ace.require('ace/tokenizer').Tokenizer;
+
+  BackgroundTokenizer = ace.require('ace/background_tokenizer').BackgroundTokenizer;
+
   module.exports = Zatanna = (function() {
     function Zatanna(aceEditor, options) {
-      var config, defaultsCopy, validationResult;
+      var config, defaultsCopy, handleEnterKey, handleSpaceKey, validationResult;
       this.editor = aceEditor;
       config = ace.require('ace/config');
       if (options == null) {
@@ -260,9 +244,42 @@
       }
       defaultsCopy = _.extend({}, defaults);
       this.options = _.merge(defaultsCopy, options);
+      handleSpaceKey = {
+        name: 'updateTokensOnSpace',
+        bindKey: 'Space',
+        exec: (function(_this) {
+          return function(e) {
+            var lastRow;
+            _this.editor.insert(' ');
+            lastRow = _this.editor.getSession().getLength();
+            return _this.bgTokenizer.fireUpdateEvent(0, lastRow);
+          };
+        })(this)
+      };
+      handleEnterKey = {
+        name: 'updateTokensOnEnter',
+        bindKey: 'Enter',
+        exec: (function(_this) {
+          return function(e) {
+            var lastRow;
+            _this.editor.insert('\n');
+            lastRow = _this.editor.getSession().getLength();
+            return _this.bgTokenizer.fireUpdateEvent(0, lastRow);
+          };
+        })(this)
+      };
+      this.editor.commands.addCommand(handleSpaceKey);
+      this.editor.commands.addCommand(handleEnterKey);
       ace.config.loadModule('ace/ext/language_tools', (function(_this) {
         return function() {
+          var aceDocument, highlightRules, tokenizer;
           _this.snippetManager = ace.require('ace/snippets').snippetManager;
+          highlightRules = new (_this.editor.getSession().getMode().HighlightRules)();
+          tokenizer = new Tokenizer(highlightRules.getRules());
+          _this.bgTokenizer = new BackgroundTokenizer(tokenizer, _this.editor);
+          aceDocument = _this.editor.getSession().getDocument();
+          _this.bgTokenizer.setDocument(aceDocument);
+          _this.bgTokenizer.start(0);
           _this.setAceOptions();
           _this.copyCompleters();
           return _this.activateCompleter();
@@ -294,7 +311,7 @@
       };
       _ref = this.editor.completers, this.completers.snippets.comp = _ref[0], this.completers.text.comp = _ref[1], this.completers.keywords.comp = _ref[2];
       this.completers.snippets.comp = require('./completers/snippets')(this.snippetManager);
-      return this.completers.text.comp = require('./completers/text')(this.editor);
+      return this.completers.text.comp = require('./completers/text')(this.editor, this.bgTokenizer);
     };
 
     Zatanna.prototype.activateCompleter = function(comp) {

@@ -1,6 +1,9 @@
 defaults = require './defaults'
 optionsValidator = require './validators/options'
 
+{Tokenizer} = ace.require 'ace/tokenizer'
+{BackgroundTokenizer} = ace.require 'ace/background_tokenizer'
+
 module.exports = class Zatanna
 
   constructor: (aceEditor, options) ->
@@ -15,8 +18,37 @@ module.exports = class Zatanna
     defaultsCopy = _.extend {}, defaults
     @options = _.merge defaultsCopy, options
 
+    # update tokens when ever a space is hit
+    handleSpaceKey =  
+      name: 'updateTokensOnSpace'
+      bindKey: 'Space'
+      exec: (e) =>
+        @editor.insert ' '
+        lastRow = @editor.getSession().getLength()
+        @bgTokenizer.fireUpdateEvent 0, lastRow
+
+    # update tokens when ever a space is hit
+    handleEnterKey =  
+      name: 'updateTokensOnEnter'
+      bindKey: 'Enter'
+      exec: (e) =>
+        @editor.insert '\n'
+        lastRow = @editor.getSession().getLength()
+        @bgTokenizer.fireUpdateEvent 0, lastRow
+    @editor.commands.addCommand handleSpaceKey
+    @editor.commands.addCommand handleEnterKey
+
     ace.config.loadModule 'ace/ext/language_tools', () =>
       @snippetManager = ace.require('ace/snippets').snippetManager
+
+      # define a background tokenizer that constantly tokenizes the code
+      highlightRules = new (@editor.getSession().getMode().HighlightRules)()
+      tokenizer = new Tokenizer highlightRules.getRules()
+      @bgTokenizer = new BackgroundTokenizer tokenizer, @editor
+      aceDocument = @editor.getSession().getDocument()
+      @bgTokenizer.setDocument aceDocument
+      @bgTokenizer.start(0)
+
       @setAceOptions()
       @copyCompleters()
       @activateCompleter()
@@ -41,7 +73,7 @@ module.exports = class Zatanna
     [@completers.snippets.comp, @completers.text.comp, @completers.keywords.comp] = @editor.completers
 
     @completers.snippets.comp = require('./completers/snippets') @snippetManager # Replace the default snippet completer with our custom one
-    @completers.text.comp = require('./completers/text') @editor # Replace default text completer with custom one
+    @completers.text.comp = require('./completers/text') @editor, @bgTokenizer # Replace default text completer with custom one
 
   activateCompleter: (comp) ->
     if Array.isArray comp

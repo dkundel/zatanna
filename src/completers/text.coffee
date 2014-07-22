@@ -1,12 +1,10 @@
 _ = require 'lodash'
 fuzzaldrin = require 'fuzzaldrin'
-{Tokenizer} = ace.require 'ace/tokenizer'
-{BackgroundTokenizer} = ace.require 'ace/background_tokenizer'
 {Range} = ace.require 'ace/range'
 
 splitRegex = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w]+/
 
-module.exports = (editor) ->
+module.exports = (editor, bgTokenizer) ->
   dictionary = []
 
   getCurrentWord = (doc, pos) ->
@@ -16,8 +14,9 @@ module.exports = (editor) ->
     text.split(splitRegex)[0]
 
   handleTokenUpdate = (e) ->
+    bgTokenizer.setDocument editor.getSession().getDocument()
     newDictionary = []
-    noLines = editor.getSession().getDocument().getLength()
+    noLines = e.data.last
     for row in [0...noLines]
       tokens = bgTokenizer.getTokens row
       for tok in tokens
@@ -29,23 +28,7 @@ module.exports = (editor) ->
     dictionary = _.uniq newDictionary, (el) ->
       el.value
 
-  handleSpaceKey = 
-    name: 'updateTokens'
-    bindKey: 'Space'
-    exec: (e) ->
-      editor.insert ' '
-      lastRow = editor.getSession().getLength()
-      bgTokenizer.fireUpdateEvent 0, lastRow
-
-
-  highlightRules = new (editor.getSession().getMode().HighlightRules)()
-  tokenizer = new Tokenizer highlightRules.getRules()
-  bgTokenizer = new BackgroundTokenizer tokenizer, editor
   bgTokenizer.on 'update', handleTokenUpdate
-  bgTokenizer.setDocument editor.getSession().getDocument()
-  bgTokenizer.start(0)
-
-  editor.commands.addCommand handleSpaceKey
 
   getCompletions: (editor, session, pos, prefix, callback) ->
     completions = []
