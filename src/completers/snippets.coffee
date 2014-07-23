@@ -4,11 +4,12 @@
   treated better in the autocomplete than local values
 ###
 {score} = require 'fuzzaldrin'
-{Range} = ace.require 'ace/range'
 
 splitRegex = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w]+/
 
 module.exports = (SnippetManager) ->
+  {Range} = ace.require 'ace/range'
+  
   getCurrentWord = (doc, pos) ->
     textBefore = doc.getTextRange(Range.fromPoints({row: 0, column:0}, pos))
     text = doc.getValue()

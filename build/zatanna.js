@@ -7,16 +7,15 @@
  */
 
 (function() {
-  var Range, score, splitRegex;
+  var score, splitRegex;
 
   score = require('fuzzaldrin').score;
-
-  Range = ace.require('ace/range').Range;
 
   splitRegex = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w]+/;
 
   module.exports = function(SnippetManager) {
-    var getCurrentWord;
+    var Range, getCurrentWord;
+    Range = ace.require('ace/range').Range;
     getCurrentWord = function(doc, pos) {
       var text, textBefore;
       textBefore = doc.getTextRange(Range.fromPoints({
@@ -62,18 +61,17 @@
 
 },{"fuzzaldrin":7}],2:[function(require,module,exports){
 (function() {
-  var Range, checkToken, fuzzaldrin, splitRegex, _;
+  var checkToken, fuzzaldrin, splitRegex, _;
 
   _ = require('lodash');
 
   fuzzaldrin = require('fuzzaldrin');
 
-  Range = ace.require('ace/range').Range;
-
   splitRegex = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w]+/;
 
   module.exports = function(editor, bgTokenizer) {
-    var dictionary, getCurrentWord, handleTokenUpdate;
+    var Range, dictionary, getCurrentWord, handleTokenUpdate;
+    Range = ace.require('ace/range').Range;
     dictionary = [];
     getCurrentWord = function(doc, pos) {
       var text, textBefore;
@@ -220,19 +218,23 @@
 
 },{"tv4":11}],5:[function(require,module,exports){
 (function() {
-  var BackgroundTokenizer, Tokenizer, Zatanna, defaults, optionsValidator;
+  var Zatanna, defaults, optionsValidator;
 
   defaults = require('./defaults');
 
   optionsValidator = require('./validators/options');
 
-  Tokenizer = ace.require('ace/tokenizer').Tokenizer;
-
-  BackgroundTokenizer = ace.require('ace/background_tokenizer').BackgroundTokenizer;
-
   module.exports = Zatanna = (function() {
+    var BackgroundTokenizer, Tokenizer;
+
+    Tokenizer = '';
+
+    BackgroundTokenizer = '';
+
     function Zatanna(aceEditor, options) {
       var config, defaultsCopy, handleEnterKey, handleSpaceKey, validationResult;
+      Tokenizer = ace.require('ace/tokenizer').Tokenizer;
+      BackgroundTokenizer = ace.require('ace/background_tokenizer').BackgroundTokenizer;
       this.editor = aceEditor;
       config = ace.require('ace/config');
       if (options == null) {

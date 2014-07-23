@@ -1,12 +1,14 @@
 defaults = require './defaults'
 optionsValidator = require './validators/options'
 
-{Tokenizer} = ace.require 'ace/tokenizer'
-{BackgroundTokenizer} = ace.require 'ace/background_tokenizer'
-
 module.exports = class Zatanna
+  Tokenizer = ''
+  BackgroundTokenizer = ''
 
   constructor: (aceEditor, options) ->
+    {Tokenizer} = ace.require 'ace/tokenizer'
+    {BackgroundTokenizer} = ace.require 'ace/background_tokenizer'
+    
     @editor = aceEditor
     config = ace.require 'ace/config'
 

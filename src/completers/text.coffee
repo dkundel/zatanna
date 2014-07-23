@@ -1,10 +1,11 @@
 _ = require 'lodash'
 fuzzaldrin = require 'fuzzaldrin'
-{Range} = ace.require 'ace/range'
 
 splitRegex = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w]+/
 
 module.exports = (editor, bgTokenizer) ->
+  {Range} = ace.require 'ace/range'
+  
   dictionary = []
 
   getCurrentWord = (doc, pos) ->
