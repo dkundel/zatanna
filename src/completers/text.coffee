@@ -43,7 +43,7 @@ module.exports = (editor, bgTokenizer) ->
 checkToken = (token) ->
   check = (parameter) ->
     (token.type.indexOf parameter) is 0
-  result = check 'constant'
+  result = (check('constant') and not check 'constant.numeric')
   result = result or check 'identifier'
   result = result or check 'variable'
   result = result or check 'keyword'

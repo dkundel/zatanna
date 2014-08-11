@@ -130,7 +130,7 @@
     check = function(parameter) {
       return (token.type.indexOf(parameter)) === 0;
     };
-    result = check('constant');
+    result = check('constant') && !check('constant.numeric');
     result = result || check('identifier');
     result = result || check('variable');
     result = result || check('keyword');
