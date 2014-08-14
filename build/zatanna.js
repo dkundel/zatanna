@@ -218,7 +218,8 @@
 
 },{"tv4":11}],5:[function(require,module,exports){
 (function() {
-  var Zatanna, defaults, optionsValidator;
+  var Zatanna, defaults, optionsValidator,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   defaults = require('./defaults');
 
@@ -232,6 +233,7 @@
     BackgroundTokenizer = '';
 
     function Zatanna(aceEditor, options) {
+      this.doLiveCompletion = __bind(this.doLiveCompletion, this);
       var config, defaultsCopy, handleEnterKey, handleSpaceKey, validationResult;
       Tokenizer = ace.require('ace/tokenizer').Tokenizer;
       BackgroundTokenizer = ace.require('ace/background_tokenizer').BackgroundTokenizer;
@@ -284,19 +286,20 @@
           _this.bgTokenizer.start(0);
           _this.setAceOptions();
           _this.copyCompleters();
-          return _this.activateCompleter();
+          _this.activateCompleter();
+          return _this.editor.commands.on('afterExec', _this.doLiveCompletion);
         };
       })(this));
     }
 
     Zatanna.prototype.setAceOptions = function() {
-      var aceOptions;
+      var aceOptions, _ref;
       aceOptions = {
-        'enableLiveAutocompletion': this.options.liveCompletion,
         'enableBasicAutocompletion': this.options.basic,
         'enableSnippets': this.options.snippets
       };
-      return this.editor.setOptions(aceOptions);
+      this.editor.setOptions(aceOptions);
+      return (_ref = this.editor.completer) != null ? _ref.autoSelect = true : void 0;
     };
 
     Zatanna.prototype.copyCompleters = function() {
@@ -426,6 +429,53 @@
           this.options.completers.text = value;
           this.activateCompleter();
       }
+    };
+
+    Zatanna.prototype.doLiveCompletion = function(e) {
+      var Autocomplete, TokenIterator, editor, hasCompleter, pos, prefix, text, token;
+      TokenIterator = TokenIterator || ace.require('ace/token_iterator').TokenIterator;
+      editor = e.editor;
+      text = e.args || "";
+      hasCompleter = editor.completer && editor.completer.activated;
+      if (e.command.name === "backspace") {
+        if (hasCompleter && !this.getCompletionPrefix(editor)) {
+          return editor.completer.detach();
+        }
+      } else if (e.command.name === "insertstring") {
+        pos = editor.getCursorPosition();
+        token = (new TokenIterator(editor.getSession(), pos.row, pos.column)).getCurrentToken();
+        if (token.type === 'comment' || token.type === 'string') {
+          return;
+        }
+        prefix = this.getCompletionPrefix(editor);
+        if (prefix && !hasCompleter) {
+          if (!editor.completer) {
+            Autocomplete = ace.require('ace/autocomplete').Autocomplete;
+            editor.completer = new Autocomplete();
+          }
+          editor.completer.autoSelect = true;
+          editor.completer.autoInsert = false;
+          return editor.completer.showPopup(editor);
+        }
+      }
+    };
+
+    Zatanna.prototype.getCompletionPrefix = function(editor) {
+      var line, pos, prefix, util;
+      util = util || ace.require('ace/autocomplete/util');
+      pos = editor.getCursorPosition();
+      line = editor.session.getLine(pos.row);
+      prefix = util.retrievePrecedingIdentifier(line, pos.column);
+      editor.completers.forEach(function(completer) {
+        if (completer.identifierRegexps) {
+          return completer.identifierRegexps.forEach(function(identifierRegex) {
+            if (!prefix && identifierRegex) {
+              return prefix = util.retrievePrecedingIdentifier(line, pos.column, identifierRegex);
+            }
+          });
+        }
+      });
+      return prefix;
     };
 
     return Zatanna;

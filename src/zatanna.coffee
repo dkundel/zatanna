@@ -54,14 +54,16 @@ module.exports = class Zatanna
       @setAceOptions()
       @copyCompleters()
       @activateCompleter()
+      @editor.commands.on 'afterExec', @doLiveCompletion
 
   setAceOptions: () ->
     aceOptions = 
-      'enableLiveAutocompletion': @options.liveCompletion 
+      # 'enableLiveAutocompletion': @options.liveCompletion 
       'enableBasicAutocompletion': @options.basic
       'enableSnippets': @options.snippets
 
     @editor.setOptions aceOptions
+    @editor.completer?.autoSelect = true
 
   copyCompleters: () ->
     @completers = {}
@@ -142,6 +144,44 @@ module.exports = class Zatanna
         @options.completers.text = value
         @activateCompleter()
     return
+
+  doLiveCompletion: (e) =>
+    TokenIterator = TokenIterator or ace.require('ace/token_iterator').TokenIterator
+    editor = e.editor
+    text = e.args or ""
+    hasCompleter = editor.completer and editor.completer.activated
+
+    # We don't want to autocomplete with no prefix
+    if e.command.name is "backspace"
+      if (hasCompleter and not @getCompletionPrefix(editor))
+        editor.completer.detach()
+    else if (e.command.name is "insertstring") 
+      pos = editor.getCursorPosition()
+      token = (new TokenIterator editor.getSession(), pos.row, pos.column).getCurrentToken()
+      return if (token.type is 'comment' or token.type is 'string')
+      prefix = @getCompletionPrefix editor
+      # Only autocomplete if there's a prefix that can be matched
+      if (prefix and not hasCompleter)
+        unless (editor.completer)
+          # Create new autocompleter
+          Autocomplete = ace.require('ace/autocomplete').Autocomplete
+          editor.completer = new Autocomplete()
+        # Disable autoInsert
+        editor.completer.autoSelect = true
+        editor.completer.autoInsert = false
+        editor.completer.showPopup(editor)
+ 
+  getCompletionPrefix: (editor) ->
+    util = util or ace.require 'ace/autocomplete/util'
+    pos = editor.getCursorPosition()
+    line = editor.session.getLine pos.row 
+    prefix = util.retrievePrecedingIdentifier line, pos.column
+    editor.completers.forEach (completer) ->
+      if (completer.identifierRegexps)
+        completer.identifierRegexps.forEach (identifierRegex) ->
+          if (not prefix and identifierRegex)
+            prefix = util.retrievePrecedingIdentifier line, pos.column, identifierRegex
+    return prefix
 
 self.Zatanna = Zatanna if self?
 window.Zatanna = Zatanna if window?
