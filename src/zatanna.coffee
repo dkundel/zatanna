@@ -76,7 +76,7 @@ module.exports = class Zatanna
 
     [@completers.snippets.comp, @completers.text.comp, @completers.keywords.comp] = @editor.completers
 
-    @completers.snippets.comp = require('./completers/snippets') @snippetManager # Replace the default snippet completer with our custom one
+    @completers.snippets.comp = require('./completers/snippets') @snippetManager, @options.languagePrefixes # Replace the default snippet completer with our custom one
     @completers.text.comp = require('./completers/text') @editor, @bgTokenizer # Replace default text completer with custom one
 
   activateCompleter: (comp) ->

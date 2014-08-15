@@ -21,6 +21,10 @@ module.exports = (options) ->
         type: 'string'
         required: false
         description: 'Language to load default snippets'
+      languagePrefixes:
+        type: 'string'
+        required: false
+        description: 'Language prefixes that should be removed for snippets'
       completers:
         type: 'object'
         additionalProperties: false

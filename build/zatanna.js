@@ -7,15 +7,32 @@
  */
 
 (function() {
-  var score, splitRegex;
+  var score, splitRegex, splitRegexExtensive;
 
   score = require('fuzzaldrin').score;
 
   splitRegex = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w]+/;
 
-  module.exports = function(SnippetManager) {
-    var Range, getCurrentWord;
+  splitRegexExtensive = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w\.\@]+/;
+
+  module.exports = function(SnippetManager, languagePrefixes) {
+    var Range, getCurrentWord, getPreviousWord, util;
     Range = ace.require('ace/range').Range;
+    util = ace.require('ace/autocomplete/util');
+    getPreviousWord = function(doc, pos) {
+      var textRow, words;
+      pos.column--;
+      textRow = doc.getTextRange(Range.fromPoints({
+        row: pos.row,
+        column: 0
+      }, pos));
+      words = textRow.split(splitRegexExtensive);
+      if (words.length > 0) {
+        return words[words.length - 1];
+      } else {
+        return '';
+      }
+    };
     getCurrentWord = function(doc, pos) {
       var text, textBefore;
       textBefore = doc.getTextRange(Range.fromPoints({
@@ -28,12 +45,15 @@
     };
     return {
       getCompletions: function(editor, session, pos, prefix, callback) {
-        var completions, snippetMap, word;
+        var completions, line, previousWord, snippetMap, word;
+        line = session.getLine(pos.row);
+        prefix = util.retrievePrecedingIdentifier(line, pos.column);
+        previousWord = getPreviousWord(session, pos);
         word = getCurrentWord(session, pos);
         snippetMap = SnippetManager.snippetMap;
         completions = [];
         SnippetManager.getActiveScopes(editor).forEach(function(scope) {
-          var caption, i, s, snippets, _results;
+          var caption, i, removePrefix, s, snippets, _results;
           snippets = snippetMap[scope] || [];
           i = snippets.length;
           _results = [];
@@ -43,9 +63,10 @@
             if (!caption) {
               continue;
             }
+            removePrefix = languagePrefixes.indexOf(previousWord) > -1 && s.content.indexOf(previousWord) === 0;
             _results.push(completions.push({
               caption: caption,
-              snippet: s.content,
+              snippet: removePrefix ? s.content.substr(previousWord.length) : s.content,
               score: (score(caption, word)) + 0.1,
               meta: (s.tabTrigger && !s.name ? s.tabTrigger + '\u21E5' : 'snippets')
             }));
@@ -149,6 +170,7 @@
     snippets: true,
     liveCompletion: true,
     language: 'javascript',
+    languagePrefixes: 'this.,@,self.',
     completers: {
       keywords: true,
       snippets: true,
@@ -188,6 +210,11 @@
           type: 'string',
           required: false,
           description: 'Language to load default snippets'
+        },
+        languagePrefixes: {
+          type: 'string',
+          required: false,
+          description: 'Language prefixes that should be removed for snippets'
         },
         completers: {
           type: 'object',
@@ -315,7 +342,7 @@
         pos: 2
       };
       _ref = this.editor.completers, this.completers.snippets.comp = _ref[0], this.completers.text.comp = _ref[1], this.completers.keywords.comp = _ref[2];
-      this.completers.snippets.comp = require('./completers/snippets')(this.snippetManager);
+      this.completers.snippets.comp = require('./completers/snippets')(this.snippetManager, this.options.languagePrefixes);
       return this.completers.text.comp = require('./completers/text')(this.editor, this.bgTokenizer);
     };
 
