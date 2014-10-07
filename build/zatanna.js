@@ -307,6 +307,9 @@
         return function() {
           var aceDocument, highlightRules, tokenizer;
           _this.snippetManager = ace.require('ace/snippets').snippetManager;
+          _this.snippetManager.expandWithTab = function() {
+            return false;
+          };
           highlightRules = new (_this.editor.getSession().getMode().HighlightRules)();
           tokenizer = new Tokenizer(highlightRules.getRules());
           _this.bgTokenizer = new BackgroundTokenizer(tokenizer, _this.editor);

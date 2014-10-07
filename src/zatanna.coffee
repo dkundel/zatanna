@@ -8,7 +8,7 @@ module.exports = class Zatanna
   constructor: (aceEditor, options) ->
     {Tokenizer} = ace.require 'ace/tokenizer'
     {BackgroundTokenizer} = ace.require 'ace/background_tokenizer'
-    
+
     @editor = aceEditor
     config = ace.require 'ace/config'
 
@@ -40,6 +40,13 @@ module.exports = class Zatanna
 
     ace.config.loadModule 'ace/ext/language_tools', () =>
       @snippetManager = ace.require('ace/snippets').snippetManager
+
+      # Prevent tabbing a selection trigging an incorrect autocomplete
+      # E.g. Given this.moveRight() selecting ".moveRight" from left to right and hitting tab yields this.this.moveRight()()
+      # TODO: Figure out how to intercept this properly
+      # TODO: Or, override expandSnippet command
+      # TODO: Or, SnippetManager's expandSnippetForSelection
+      @snippetManager.expandWithTab = -> return false
 
       # define a background tokenizer that constantly tokenizes the code
       highlightRules = new (@editor.getSession().getMode().HighlightRules)()
