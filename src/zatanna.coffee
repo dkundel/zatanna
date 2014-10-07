@@ -102,7 +102,7 @@ module.exports = class Zatanna
           @snippetManager.files[language] = m 
           @snippetManager.unregister m.snippets if m.snippets?.length > 0
           @snippetManager.unregister @oldSnippets if @oldSnippets?
-          m.snippets = @snippetManager.parseSnippetFile m.snippetText
+          m.snippets = if @options.snippetsLangDefaults then @snippetManager.parseSnippetFile m.snippetText else []
           m.snippets.push s for s in snippets
           @snippetManager.register m.snippets
           @oldSnippets = m.snippets
