@@ -1,4 +1,3 @@
-_ = require 'lodash'
 fuzzaldrin = require 'fuzzaldrin'
 
 splitRegex = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w]+/

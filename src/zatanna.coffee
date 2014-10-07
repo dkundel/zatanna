@@ -21,7 +21,7 @@ module.exports = class Zatanna
     @options = _.merge defaultsCopy, options
 
     # update tokens when ever a space is hit
-    handleSpaceKey =  
+    @editor.commands.addCommand
       name: 'updateTokensOnSpace'
       bindKey: 'Space'
       exec: (e) =>
@@ -29,16 +29,14 @@ module.exports = class Zatanna
         lastRow = @editor.getSession().getLength()
         @bgTokenizer.fireUpdateEvent 0, lastRow
 
-    # update tokens when ever a space is hit
-    handleEnterKey =  
+    # update tokens when ever an enter is hit
+    @editor.commands.addCommand
       name: 'updateTokensOnEnter'
       bindKey: 'Enter'
       exec: (e) =>
         @editor.insert '\n'
         lastRow = @editor.getSession().getLength()
         @bgTokenizer.fireUpdateEvent 0, lastRow
-    @editor.commands.addCommand handleSpaceKey
-    @editor.commands.addCommand handleEnterKey
 
     ace.config.loadModule 'ace/ext/language_tools', () =>
       @snippetManager = ace.require('ace/snippets').snippetManager
@@ -76,8 +74,10 @@ module.exports = class Zatanna
 
     [@completers.snippets.comp, @completers.text.comp, @completers.keywords.comp] = @editor.completers
 
-    @completers.snippets.comp = require('./completers/snippets') @snippetManager, @options.languagePrefixes # Replace the default snippet completer with our custom one
-    @completers.text.comp = require('./completers/text') @editor, @bgTokenizer # Replace default text completer with custom one
+    # Replace the default snippet completer with our custom one
+    @completers.snippets.comp = require('./completers/snippets') @snippetManager, @options.languagePrefixes
+    # Replace default text completer with custom one
+    @completers.text.comp = require('./completers/text') @editor, @bgTokenizer
 
   activateCompleter: (comp) ->
     if Array.isArray comp
@@ -154,11 +154,11 @@ module.exports = class Zatanna
     # We don't want to autocomplete with no prefix
     if e.command.name is "backspace"
       if (hasCompleter and not @getCompletionPrefix(editor))
-        editor.completer.detach()
+        editor.completer?.detach()
     else if (e.command.name is "insertstring") 
       pos = editor.getCursorPosition()
       token = (new TokenIterator editor.getSession(), pos.row, pos.column).getCurrentToken()
-      return if (token.type is 'comment' or token.type is 'string')
+      return if (not token? or token.type is 'comment' or token.type is 'string')
       prefix = @getCompletionPrefix editor
       # Only autocomplete if there's a prefix that can be matched
       if (prefix and not hasCompleter)
@@ -176,8 +176,8 @@ module.exports = class Zatanna
     pos = editor.getCursorPosition()
     line = editor.session.getLine pos.row 
     prefix = util.retrievePrecedingIdentifier line, pos.column
-    editor.completers.forEach (completer) ->
-      if (completer.identifierRegexps)
+    editor.completers?.forEach (completer) ->
+      if (completer?.identifierRegexps)
         completer.identifierRegexps.forEach (identifierRegex) ->
           if (not prefix and identifierRegex)
             prefix = util.retrievePrecedingIdentifier line, pos.column, identifierRegex
