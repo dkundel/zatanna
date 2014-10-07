@@ -11,7 +11,7 @@
 
   score = require('fuzzaldrin').score;
 
-  module.exports = function(SnippetManager, languagePrefixes) {
+  module.exports = function(SnippetManager) {
     var Range, getCurrentWord, trimSnippet, util;
     Range = ace.require('ace/range').Range;
     util = ace.require('ace/autocomplete/util');
@@ -342,7 +342,7 @@
         this.completers.snippets = {
           pos: 0
         };
-        this.completers.snippets.comp = require('./completers/snippets')(this.snippetManager, this.options.languagePrefixes);
+        this.completers.snippets.comp = require('./completers/snippets')(this.snippetManager);
       }
       if (this.options.text) {
         this.completers.text = {

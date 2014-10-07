@@ -5,7 +5,7 @@
 ###
 {score} = require 'fuzzaldrin'
 
-module.exports = (SnippetManager, languagePrefixes) ->
+module.exports = (SnippetManager) ->
   {Range} = ace.require 'ace/range'
   util = ace.require 'ace/autocomplete/util'
   

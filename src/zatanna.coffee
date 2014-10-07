@@ -70,7 +70,7 @@ module.exports = class Zatanna
     if @options.snippets
       @completers.snippets = pos: 0
       # Replace the default snippet completer with our custom one
-      @completers.snippets.comp = require('./completers/snippets') @snippetManager, @options.languagePrefixes
+      @completers.snippets.comp = require('./completers/snippets') @snippetManager
     if @options.text
       @completers.text = pos: 1
       # Replace default text completer with custom one
@@ -154,7 +154,7 @@ module.exports = class Zatanna
     if e.command.name is "backspace"
       if (hasCompleter and not @getCompletionPrefix(editor))
         editor.completer?.detach()
-    else if (e.command.name is "insertstring") 
+    else if e.command.name is "insertstring"
       pos = editor.getCursorPosition()
       token = (new TokenIterator editor.getSession(), pos.row, pos.column).getCurrentToken()
       return if (not token? or token.type is 'comment' or token.type is 'string')
