@@ -56,7 +56,7 @@ module.exports = class Zatanna
 
   setAceOptions: () ->
     aceOptions = 
-      # 'enableLiveAutocompletion': @options.liveCompletion 
+      'enableLiveAutocompletion': @options.liveCompletion
       'enableBasicAutocompletion': @options.basic
       'enableSnippets': @options.snippets
 
@@ -65,25 +65,24 @@ module.exports = class Zatanna
 
   copyCompleters: () ->
     @completers = {}
-    @completers.snippets =
-      pos: 0
-    @completers.text =
-      pos: 1
-    @completers.keywords =
-      pos: 2
-
-    [@completers.snippets.comp, @completers.text.comp, @completers.keywords.comp] = @editor.completers
-
-    # Replace the default snippet completer with our custom one
-    @completers.snippets.comp = require('./completers/snippets') @snippetManager, @options.languagePrefixes
-    # Replace default text completer with custom one
-    @completers.text.comp = require('./completers/text') @editor, @bgTokenizer
+    if @editor.completers?
+      [@completers.snippets.comp, @completers.text.comp, @completers.keywords.comp] = @editor.completers
+    if @options.snippets
+      @completers.snippets = pos: 0
+      # Replace the default snippet completer with our custom one
+      @completers.snippets.comp = require('./completers/snippets') @snippetManager, @options.languagePrefixes
+    if @options.text
+      @completers.text = pos: 1
+      # Replace default text completer with custom one
+      @completers.text.comp = require('./completers/text') @editor, @bgTokenizer
+    if @options.keywords
+      @completers.keywords = pos: 2
 
   activateCompleter: (comp) ->
     if Array.isArray comp
       @editor.completers = comp
     else if typeof comp is 'string'
-      if @completers[comp]?
+      if @completers[comp]? and @editor.completers[@completers[comp].pos] isnt @completers[comp].comp
         @editor.completers.splice(@completers[comp].pos, 0, @completers[comp].comp)
     else 
       @editor.completers = []
@@ -91,14 +90,13 @@ module.exports = class Zatanna
         if @options.completers[type] is true
           @activateCompleter type 
 
-
   addSnippets: (snippets, language) ->
     @options.language = language
     ace.config.loadModule 'ace/ext/language_tools', () =>
       @snippetManager = ace.require('ace/snippets').snippetManager
       snippetModulePath = 'ace/snippets/' + language
       ace.config.loadModule snippetModulePath, (m) => 
-        if m?        
+        if m?
           @snippetManager.files[language] = m 
           @snippetManager.unregister m.snippets if m.snippets?.length > 0
           @snippetManager.unregister @oldSnippets if @oldSnippets?
@@ -146,6 +144,7 @@ module.exports = class Zatanna
     return
 
   doLiveCompletion: (e) =>
+    return unless @options.basic or @options.snippets or @options.liveCompletion
     TokenIterator = TokenIterator or ace.require('ace/token_iterator').TokenIterator
     editor = e.editor
     text = e.args or ""

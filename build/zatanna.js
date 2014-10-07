@@ -171,6 +171,7 @@
   module.exports = defaults = {
     basic: true,
     snippets: true,
+    snippetsLangDefaults: true,
     liveCompletion: true,
     language: 'javascript',
     languagePrefixes: 'this.,@,self.',
@@ -323,6 +324,7 @@
     Zatanna.prototype.setAceOptions = function() {
       var aceOptions, _ref;
       aceOptions = {
+        'enableLiveAutocompletion': this.options.liveCompletion,
         'enableBasicAutocompletion': this.options.basic,
         'enableSnippets': this.options.snippets
       };
@@ -333,18 +335,26 @@
     Zatanna.prototype.copyCompleters = function() {
       var _ref;
       this.completers = {};
-      this.completers.snippets = {
-        pos: 0
-      };
-      this.completers.text = {
-        pos: 1
-      };
-      this.completers.keywords = {
-        pos: 2
-      };
-      _ref = this.editor.completers, this.completers.snippets.comp = _ref[0], this.completers.text.comp = _ref[1], this.completers.keywords.comp = _ref[2];
-      this.completers.snippets.comp = require('./completers/snippets')(this.snippetManager, this.options.languagePrefixes);
-      return this.completers.text.comp = require('./completers/text')(this.editor, this.bgTokenizer);
+      if (this.editor.completers != null) {
+        _ref = this.editor.completers, this.completers.snippets.comp = _ref[0], this.completers.text.comp = _ref[1], this.completers.keywords.comp = _ref[2];
+      }
+      if (this.options.snippets) {
+        this.completers.snippets = {
+          pos: 0
+        };
+        this.completers.snippets.comp = require('./completers/snippets')(this.snippetManager, this.options.languagePrefixes);
+      }
+      if (this.options.text) {
+        this.completers.text = {
+          pos: 1
+        };
+        this.completers.text.comp = require('./completers/text')(this.editor, this.bgTokenizer);
+      }
+      if (this.options.keywords) {
+        return this.completers.keywords = {
+          pos: 2
+        };
+      }
     };
 
     Zatanna.prototype.activateCompleter = function(comp) {
@@ -352,7 +362,7 @@
       if (Array.isArray(comp)) {
         return this.editor.completers = comp;
       } else if (typeof comp === 'string') {
-        if (this.completers[comp] != null) {
+        if ((this.completers[comp] != null) && this.editor.completers[this.completers[comp].pos] !== this.completers[comp].comp) {
           return this.editor.completers.splice(this.completers[comp].pos, 0, this.completers[comp].comp);
         }
       } else {
@@ -388,7 +398,7 @@
               if (_this.oldSnippets != null) {
                 _this.snippetManager.unregister(_this.oldSnippets);
               }
-              m.snippets = _this.snippetManager.parseSnippetFile(m.snippetText);
+              m.snippets = _this.options.snippetsLangDefaults ? _this.snippetManager.parseSnippetFile(m.snippetText) : [];
               for (_i = 0, _len = snippets.length; _i < _len; _i++) {
                 s = snippets[_i];
                 m.snippets.push(s);
@@ -461,6 +471,9 @@
 
     Zatanna.prototype.doLiveCompletion = function(e) {
       var Autocomplete, TokenIterator, editor, hasCompleter, pos, prefix, text, token, _ref;
+      if (!(this.options.basic || this.options.snippets || this.options.liveCompletion)) {
+        return;
+      }
       TokenIterator = TokenIterator || ace.require('ace/token_iterator').TokenIterator;
       editor = e.editor;
       text = e.args || "";
