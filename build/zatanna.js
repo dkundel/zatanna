@@ -11,8 +11,8 @@
 
   score = require('fuzzaldrin').score;
 
-  module.exports = function(SnippetManager) {
-    var Range, getCurrentWord, trimSnippet, util;
+  module.exports = function(SnippetManager, autoLineEndings) {
+    var Range, getCurrentWord, scrubSnippet, util;
     Range = ace.require('ace/range').Range;
     util = ace.require('ace/autocomplete/util');
     getCurrentWord = function(doc, pos) {
@@ -28,7 +28,7 @@
       }
       return text = text.substring(start, end);
     };
-    trimSnippet = function(snippet, caption, line, prefix, pos) {
+    scrubSnippet = function(snippet, caption, line, prefix, pos, lang) {
       var captionStart, linePrefix, lineSuffix, prefixStart, snippetPrefix, snippetSuffix;
       if (prefixStart = snippet.toLowerCase().indexOf(prefix.toLowerCase()) > -1) {
         captionStart = snippet.indexOf(caption);
@@ -46,12 +46,16 @@
         if (snippetSuffix.length > 0 && snippetSuffix === lineSuffix) {
           snippet = snippet.slice(0, snippet.length - snippetSuffix.length);
         }
+        if (autoLineEndings[lang] && /^\s*$/.test(lineSuffix)) {
+          snippet += autoLineEndings[lang];
+        }
       }
       return snippet;
     };
     return {
       getCompletions: function(editor, session, pos, prefix, callback) {
-        var completions, line, snippetMap, word;
+        var completions, lang, line, snippetMap, word, _ref, _ref1;
+        lang = (_ref = session.getMode()) != null ? (_ref1 = _ref.$id) != null ? _ref1.substr('ace/mode/'.length) : void 0 : void 0;
         line = session.getLine(pos.row);
         prefix = util.retrievePrecedingIdentifier(line, pos.column);
         word = getCurrentWord(session, pos);
@@ -70,7 +74,7 @@
             }
             _results.push(completions.push({
               caption: caption,
-              snippet: trimSnippet(s.content, caption, line, prefix, pos),
+              snippet: scrubSnippet(s.content, caption, line, prefix, pos, lang),
               score: (score(caption, word)) + 0.1,
               meta: (s.tabTrigger && !s.name ? s.tabTrigger + '\u21E5' : 'snippets')
             }));
@@ -178,7 +182,8 @@
       keywords: true,
       snippets: true,
       text: true
-    }
+    },
+    autoLineEndings: {}
   };
 
 }).call(this);
@@ -344,7 +349,7 @@
         this.completers.snippets = {
           pos: 0
         };
-        this.completers.snippets.comp = require('./completers/snippets')(this.snippetManager);
+        this.completers.snippets.comp = require('./completers/snippets')(this.snippetManager, this.options.autoLineEndings);
       }
       if (this.options.text) {
         this.completers.text = {

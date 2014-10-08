@@ -5,7 +5,7 @@
 ###
 {score} = require 'fuzzaldrin'
 
-module.exports = (SnippetManager) ->
+module.exports = (SnippetManager, autoLineEndings) ->
   {Range} = ace.require 'ace/range'
   util = ace.require 'ace/autocomplete/util'
   
@@ -17,8 +17,8 @@ module.exports = (SnippetManager) ->
     start++ if start >= 0
     text = text.substring start, end
 
-  trimSnippet = (snippet, caption, line, prefix, pos) ->
-    # console.log "Zatanna snippet=#{snippet} caption=#{caption} line=#{line} prefix=#{prefix} pos.column=#{pos.column}"
+  scrubSnippet = (snippet, caption, line, prefix, pos, lang) ->
+    # console.log "Zatanna snippet=#{snippet} caption=#{caption} line=#{line} prefix=#{prefix} pos.column=#{pos.column} lang=#{lang}"
     # trim snippet prefix and suffix if already in the document (line)
     if prefixStart = snippet.toLowerCase().indexOf(prefix.toLowerCase()) > -1
       captionStart = snippet.indexOf caption
@@ -33,10 +33,15 @@ module.exports = (SnippetManager) ->
         snippet = snippet.slice snippetPrefix.length 
       if snippetSuffix.length > 0 and snippetSuffix is lineSuffix
         snippet = snippet.slice 0, snippet.length - snippetSuffix.length
+      
+      # append automatic line ending if no line suffix and at end of line
+      if autoLineEndings[lang] and /^\s*$/.test(lineSuffix)
+        snippet += autoLineEndings[lang]
       # console.log "Zatanna snippetPrefix=#{snippetPrefix} linePrefix=#{linePrefix} snippetSuffix=#{snippetSuffix} lineSuffix=#{lineSuffix} snippet=#{snippet}"
     snippet
 
   getCompletions: (editor, session, pos, prefix, callback) ->
+    lang = session.getMode()?.$id?.substr 'ace/mode/'.length
     line = session.getLine pos.row
     prefix = util.retrievePrecedingIdentifier line, pos.column
     word = getCurrentWord session, pos
@@ -51,7 +56,7 @@ module.exports = (SnippetManager) ->
         continue unless caption
         completions.push 
           caption: caption
-          snippet: trimSnippet s.content, caption, line, prefix, pos
+          snippet: scrubSnippet s.content, caption, line, prefix, pos, lang
           score: (score caption, word) + 0.1
           meta: (if s.tabTrigger and not s.name then s.tabTrigger + '\u21E5' else 'snippets')
     , @

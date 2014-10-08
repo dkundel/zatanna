@@ -77,7 +77,7 @@ module.exports = class Zatanna
     if @options.snippets
       @completers.snippets = pos: 0
       # Replace the default snippet completer with our custom one
-      @completers.snippets.comp = require('./completers/snippets') @snippetManager
+      @completers.snippets.comp = require('./completers/snippets') @snippetManager, @options.autoLineEndings
     if @options.text
       @completers.text = pos: 1
       # Replace default text completer with custom one
