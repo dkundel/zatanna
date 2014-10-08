@@ -18,10 +18,10 @@ module.exports = (SnippetManager) ->
     text = text.substring start, end
 
   trimSnippet = (snippet, caption, line, prefix, pos) ->
+    # console.log "Zatanna snippet=#{snippet} caption=#{caption} line=#{line} prefix=#{prefix} pos.column=#{pos.column}"
     # trim snippet prefix and suffix if already in the document (line)
-    captionStart = snippet.indexOf caption
-    prefixStart = snippet.toLowerCase().indexOf(prefix.toLowerCase())
-    if captionStart > -1 and captionStart is prefixStart
+    if prefixStart = snippet.toLowerCase().indexOf(prefix.toLowerCase()) > -1
+      captionStart = snippet.indexOf caption
       snippetPrefix = snippet.substring 0, captionStart
       if pos.column - prefix.length - snippetPrefix.length >= 0
         linePrefix = line.substr pos.column - prefix.length - snippetPrefix.length, snippetPrefix.length
@@ -33,6 +33,7 @@ module.exports = (SnippetManager) ->
         snippet = snippet.slice snippetPrefix.length 
       if snippetSuffix.length > 0 and snippetSuffix is lineSuffix
         snippet = snippet.slice 0, snippet.length - snippetSuffix.length
+      # console.log "Zatanna snippetPrefix=#{snippetPrefix} linePrefix=#{linePrefix} snippetSuffix=#{snippetSuffix} lineSuffix=#{lineSuffix} snippet=#{snippet}"
     snippet
 
   getCompletions: (editor, session, pos, prefix, callback) ->

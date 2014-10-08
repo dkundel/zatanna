@@ -30,9 +30,8 @@
     };
     trimSnippet = function(snippet, caption, line, prefix, pos) {
       var captionStart, linePrefix, lineSuffix, prefixStart, snippetPrefix, snippetSuffix;
-      captionStart = snippet.indexOf(caption);
-      prefixStart = snippet.toLowerCase().indexOf(prefix.toLowerCase());
-      if (captionStart > -1 && captionStart === prefixStart) {
+      if (prefixStart = snippet.toLowerCase().indexOf(prefix.toLowerCase()) > -1) {
+        captionStart = snippet.indexOf(caption);
         snippetPrefix = snippet.substring(0, captionStart);
         if (pos.column - prefix.length - snippetPrefix.length >= 0) {
           linePrefix = line.substr(pos.column - prefix.length - snippetPrefix.length, snippetPrefix.length);
