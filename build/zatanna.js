@@ -62,12 +62,11 @@
         snippetMap = SnippetManager.snippetMap;
         completions = [];
         SnippetManager.getActiveScopes(editor).forEach(function(scope) {
-          var caption, i, s, snippets, _results;
+          var caption, s, snippets, _i, _len, _results;
           snippets = snippetMap[scope] || [];
-          i = snippets.length;
           _results = [];
-          while (i--) {
-            s = snippets[i];
+          for (_i = 0, _len = snippets.length; _i < _len; _i++) {
+            s = snippets[_i];
             caption = s.name || s.tabTrigger;
             if (!caption) {
               continue;
@@ -76,7 +75,7 @@
               caption: caption,
               snippet: scrubSnippet(s.content, caption, line, prefix, pos, lang),
               score: (score(caption, word)) + 0.1,
-              meta: (s.tabTrigger && !s.name ? s.tabTrigger + '\u21E5' : 'snippets')
+              meta: s.meta || (s.tabTrigger && !s.name ? s.tabTrigger + '\u21E5' : 'snippets')
             }));
           }
           return _results;

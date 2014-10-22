@@ -41,6 +41,11 @@ module.exports = (SnippetManager, autoLineEndings) ->
     snippet
 
   getCompletions: (editor, session, pos, prefix, callback) ->
+    # Completion format:
+    # caption: displayed left-justified in popup, and what's being matched
+    # snippet: what will be inserted into document
+    # score: TODO: what is this for?
+    # meta: displayed right-justfied in popup
     lang = session.getMode()?.$id?.substr 'ace/mode/'.length
     line = session.getLine pos.row
     prefix = util.retrievePrecedingIdentifier line, pos.column
@@ -49,15 +54,13 @@ module.exports = (SnippetManager, autoLineEndings) ->
     completions = []
     SnippetManager.getActiveScopes(editor).forEach (scope) ->
       snippets = snippetMap[scope] or []
-      i = snippets.length
-      while i--
-        s = snippets[i]
+      for s in snippets
         caption  = s.name or s.tabTrigger
         continue unless caption
         completions.push 
           caption: caption
           snippet: scrubSnippet s.content, caption, line, prefix, pos, lang
           score: (score caption, word) + 0.1
-          meta: (if s.tabTrigger and not s.name then s.tabTrigger + '\u21E5' else 'snippets')
+          meta: s.meta or (if s.tabTrigger and not s.name then s.tabTrigger + '\u21E5' else 'snippets')
     , @
     callback null, completions
