@@ -1,4 +1,8 @@
 module.exports = defaults = 
+  autoLineEndings: 
+    # Mapping ace mode language to line endings to automatically insert
+    # E.g. javascript: ";"
+    {}
   basic: true
   snippets: true
   snippetsLangDefaults: true
@@ -9,7 +13,3 @@ module.exports = defaults =
     keywords: true
     snippets: true
     text: true
-  autoLineEndings: 
-    # Mapping ace mode language to line endings to automatically insert
-    # E.g. javascript: ";"
-    {}

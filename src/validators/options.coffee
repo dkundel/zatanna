@@ -5,6 +5,10 @@ module.exports = (options) ->
     "type": "object"
     additionalProperties: false
     properties:
+      autoLineEndings:
+        type: 'object'
+        required: false
+        description: "Mapping ace mode language to line endings to automatically insert.  E.g. javacscript: ';'"
       basic:
         type: 'boolean'
         required: false
@@ -13,6 +17,10 @@ module.exports = (options) ->
         type: 'boolean'
         required: false
         description: 'Offers code snippets for autocomplete'
+      snippetsLangDefaults:
+        type: 'boolean'
+        required: false
+        description: 'If true, use language default snippets'
       liveCompletion:
         type: 'boolean'
         required: false
@@ -41,3 +49,11 @@ module.exports = (options) ->
             type: 'boolean'
             required: false
             description: 'Show text content suggestions in autocomplete popup'
+      popupFontSizePx:
+        type: 'number'
+        required: false
+        description: 'Font-size in pixels for popup text'
+      popupWidthPx:
+        type: 'number'
+        required: false
+        description: 'Width in pixels for popup'

@@ -14,7 +14,7 @@ module.exports = class Zatanna
 
     options ?= {}
     validationResult = optionsValidator options
-    unless validationResult
+    unless validationResult.valid
       throw new Error "Invalid Zatanna options: " + JSON.stringify(validationResult.errors, null, 4)
 
     defaultsCopy = _.extend {}, defaults
@@ -176,6 +176,10 @@ module.exports = class Zatanna
         editor.completer.autoSelect = true
         editor.completer.autoInsert = false
         editor.completer.showPopup(editor)
+        if editor.completer.popup? and (@options.popupFontSizePx? or @options.popupWidthPx?)
+          $('.ace_autocomplete').css('font-size', @options.popupFontSizePx + 'px') if @options.popupFontSizePx?
+          $('.ace_autocomplete').css('width', @options.popupWidthPx + 'px') if @options.popupWidthPx?
+          editor.completer.popup.resize?()
  
   getCompletionPrefix: (editor) ->
     util = util or ace.require 'ace/autocomplete/util'

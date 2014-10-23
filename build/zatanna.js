@@ -171,6 +171,7 @@
   var defaults;
 
   module.exports = defaults = {
+    autoLineEndings: {},
     basic: true,
     snippets: true,
     snippetsLangDefaults: true,
@@ -181,8 +182,7 @@
       keywords: true,
       snippets: true,
       text: true
-    },
-    autoLineEndings: {}
+    }
   };
 
 }).call(this);
@@ -198,6 +198,11 @@
       "type": "object",
       additionalProperties: false,
       properties: {
+        autoLineEndings: {
+          type: 'object',
+          required: false,
+          description: "Mapping ace mode language to line endings to automatically insert.  E.g. javacscript: ';'"
+        },
         basic: {
           type: 'boolean',
           required: false,
@@ -207,6 +212,11 @@
           type: 'boolean',
           required: false,
           description: 'Offers code snippets for autocomplete'
+        },
+        snippetsLangDefaults: {
+          type: 'boolean',
+          required: false,
+          description: 'If true, use language default snippets'
         },
         liveCompletion: {
           type: 'boolean',
@@ -243,6 +253,16 @@
               description: 'Show text content suggestions in autocomplete popup'
             }
           }
+        },
+        popupFontSizePx: {
+          type: 'number',
+          required: false,
+          description: 'Font-size in pixels for popup text'
+        },
+        popupWidthPx: {
+          type: 'number',
+          required: false,
+          description: 'Width in pixels for popup'
         }
       }
     });
@@ -277,7 +297,7 @@
         options = {};
       }
       validationResult = optionsValidator(options);
-      if (!validationResult) {
+      if (!validationResult.valid) {
         throw new Error("Invalid Zatanna options: " + JSON.stringify(validationResult.errors, null, 4));
       }
       defaultsCopy = _.extend({}, defaults);
@@ -476,7 +496,7 @@
     };
 
     Zatanna.prototype.doLiveCompletion = function(e) {
-      var Autocomplete, TokenIterator, editor, hasCompleter, pos, prefix, text, token, _ref;
+      var Autocomplete, TokenIterator, editor, hasCompleter, pos, prefix, text, token, _base, _ref;
       if (!(this.options.basic || this.options.snippets || this.options.liveCompletion)) {
         return;
       }
@@ -502,7 +522,16 @@
           }
           editor.completer.autoSelect = true;
           editor.completer.autoInsert = false;
-          return editor.completer.showPopup(editor);
+          editor.completer.showPopup(editor);
+          if ((editor.completer.popup != null) && ((this.options.popupFontSizePx != null) || (this.options.popupWidthPx != null))) {
+            if (this.options.popupFontSizePx != null) {
+              $('.ace_autocomplete').css('font-size', this.options.popupFontSizePx + 'px');
+            }
+            if (this.options.popupWidthPx != null) {
+              $('.ace_autocomplete').css('width', this.options.popupWidthPx + 'px');
+            }
+            return typeof (_base = editor.completer.popup).resize === "function" ? _base.resize() : void 0;
+          }
         }
       }
     };
