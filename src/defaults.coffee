@@ -4,7 +4,6 @@ module.exports = defaults =
     # E.g. javascript: ";"
     {}
   basic: true
-  snippets: true
   snippetsLangDefaults: true
   liveCompletion: true
   language: 'javascript'

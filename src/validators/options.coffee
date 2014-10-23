@@ -13,7 +13,7 @@ module.exports = (options) ->
         type: 'boolean'
         required: false
         description: 'Basic autocompletion based on keywords used in code'
-      snippets:
+      snippets: # TODO: remove this sometime after 10/23/14
         type: 'boolean'
         required: false
         description: 'Offers code snippets for autocomplete'

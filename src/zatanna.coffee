@@ -13,12 +13,13 @@ module.exports = class Zatanna
     config = ace.require 'ace/config'
 
     options ?= {}
-    validationResult = optionsValidator options
-    unless validationResult.valid
-      throw new Error "Invalid Zatanna options: " + JSON.stringify(validationResult.errors, null, 4)
 
     defaultsCopy = _.extend {}, defaults
     @options = _.merge defaultsCopy, options
+
+    validationResult = optionsValidator @options
+    unless validationResult.valid
+      throw new Error "Invalid Zatanna options: " + JSON.stringify(validationResult.errors, null, 4)
 
     # update tokens when ever a space is hit
     @editor.commands.addCommand
@@ -65,24 +66,24 @@ module.exports = class Zatanna
     aceOptions = 
       'enableLiveAutocompletion': @options.liveCompletion
       'enableBasicAutocompletion': @options.basic
-      'enableSnippets': @options.snippets
+      'enableSnippets': @options.completers.snippets
 
     @editor.setOptions aceOptions
     @editor.completer?.autoSelect = true
 
   copyCompleters: () ->
-    @completers = {}
+    @completers = {snippets: {}, text: {}, keywords: {}}
     if @editor.completers?
       [@completers.snippets.comp, @completers.text.comp, @completers.keywords.comp] = @editor.completers
-    if @options.snippets
+    if @options.completers.snippets
       @completers.snippets = pos: 0
       # Replace the default snippet completer with our custom one
       @completers.snippets.comp = require('./completers/snippets') @snippetManager, @options.autoLineEndings
-    if @options.text
+    if @options.completers.text
       @completers.text = pos: 1
       # Replace default text completer with custom one
-      @completers.text.comp = require('./completers/text') @editor, @bgTokenizer
-    if @options.keywords
+      @completers.text.comp = require('./completers/text') @editor, @bgTokenizer, @completers.snippets.comp
+    if @options.completers.keywords
       @completers.keywords = pos: 2
 
   activateCompleter: (comp) ->
@@ -121,7 +122,6 @@ module.exports = class Zatanna
     switch setting
       when 'snippets' or 'completers.snippets'
         return unless typeof value is 'boolean'
-        @options.snippets = value
         @options.completers.snippets = value
         @setAceOptions()
         @activateCompleter 'snippets'
@@ -151,7 +151,7 @@ module.exports = class Zatanna
     return
 
   doLiveCompletion: (e) =>
-    return unless @options.basic or @options.snippets or @options.liveCompletion
+    return unless @options.basic or @options.completers.snippets or @options.liveCompletion
     TokenIterator = TokenIterator or ace.require('ace/token_iterator').TokenIterator
     editor = e.editor
     text = e.args or ""
@@ -180,7 +180,16 @@ module.exports = class Zatanna
           $('.ace_autocomplete').css('font-size', @options.popupFontSizePx + 'px') if @options.popupFontSizePx?
           $('.ace_autocomplete').css('width', @options.popupWidthPx + 'px') if @options.popupWidthPx?
           editor.completer.popup.resize?()
- 
+    # TODO: automatically moving the cursor to a newline after autocomplete needs work
+    # else if e.command.name is 'Return'
+    #   pos = editor.getCursorPosition()
+    #   line = editor.session.getLine(pos.row)
+    #   if pos.column is line.length
+    #     # TODO: extra newline if inline autocomplete, then cmd-right, then enter
+    #     editor.insert '\n'
+    #     line = editor.session.getLine(pos.row + 1)
+    #     editor.moveCursorTo pos.row + 1, line.length
+
   getCompletionPrefix: (editor) ->
     util = util or ace.require 'ace/autocomplete/util'
     pos = editor.getCursorPosition()

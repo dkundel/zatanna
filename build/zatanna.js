@@ -80,6 +80,7 @@
           }
           return _results;
         }, this);
+        this.completions = completions;
         return callback(null, completions);
       }
     };
@@ -89,13 +90,14 @@
 
 },{"fuzzaldrin":7}],2:[function(require,module,exports){
 (function() {
-  var checkToken, fuzzaldrin, splitRegex;
+  var checkToken, fuzzaldrin, splitRegex,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   fuzzaldrin = require('fuzzaldrin');
 
   splitRegex = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w]+/;
 
-  module.exports = function(editor, bgTokenizer) {
+  module.exports = function(editor, bgTokenizer, snippetsCompleter) {
     var Range, dictionary, getCurrentWord, handleTokenUpdate;
     Range = ace.require('ace/range').Range;
     dictionary = [];
@@ -124,7 +126,7 @@
           newDictionary.push({
             caption: tok.value,
             value: tok.value,
-            meta: 'local'
+            meta: 'press enter'
           });
         }
       }
@@ -135,13 +137,29 @@
     bgTokenizer.on('update', handleTokenUpdate);
     return {
       getCompletions: function(editor, session, pos, prefix, callback) {
-        var completions, noLines, suggestion, word, _i, _len;
+        var comp, completions, noLines, snippetCompletions, suggestion, word, _i, _len;
         completions = [];
         noLines = session.getLength();
         word = getCurrentWord(session, pos);
         completions = fuzzaldrin.filter(dictionary, word, {
           key: 'value'
         });
+        if ((snippetsCompleter != null ? snippetsCompleter.completions : void 0) != null) {
+          snippetCompletions = snippetsCompleter.completions.map(function(comp) {
+            return comp.caption;
+          });
+          completions = (function() {
+            var _i, _len, _ref, _results;
+            _results = [];
+            for (_i = 0, _len = completions.length; _i < _len; _i++) {
+              comp = completions[_i];
+              if (_ref = comp.caption, __indexOf.call(snippetCompletions, _ref) < 0) {
+                _results.push(comp);
+              }
+            }
+            return _results;
+          })();
+        }
         for (_i = 0, _len = completions.length; _i < _len; _i++) {
           suggestion = completions[_i];
           suggestion.score = fuzzaldrin.score(suggestion.value, word);
@@ -173,7 +191,6 @@
   module.exports = defaults = {
     autoLineEndings: {},
     basic: true,
-    snippets: true,
     snippetsLangDefaults: true,
     liveCompletion: true,
     language: 'javascript',
@@ -296,12 +313,12 @@
       if (options == null) {
         options = {};
       }
-      validationResult = optionsValidator(options);
+      defaultsCopy = _.extend({}, defaults);
+      this.options = _.merge(defaultsCopy, options);
+      validationResult = optionsValidator(this.options);
       if (!validationResult.valid) {
         throw new Error("Invalid Zatanna options: " + JSON.stringify(validationResult.errors, null, 4));
       }
-      defaultsCopy = _.extend({}, defaults);
-      this.options = _.merge(defaultsCopy, options);
       this.editor.commands.addCommand({
         name: 'updateTokensOnSpace',
         bindKey: 'Space',
@@ -352,7 +369,7 @@
       aceOptions = {
         'enableLiveAutocompletion': this.options.liveCompletion,
         'enableBasicAutocompletion': this.options.basic,
-        'enableSnippets': this.options.snippets
+        'enableSnippets': this.options.completers.snippets
       };
       this.editor.setOptions(aceOptions);
       return (_ref = this.editor.completer) != null ? _ref.autoSelect = true : void 0;
@@ -360,23 +377,27 @@
 
     Zatanna.prototype.copyCompleters = function() {
       var _ref;
-      this.completers = {};
+      this.completers = {
+        snippets: {},
+        text: {},
+        keywords: {}
+      };
       if (this.editor.completers != null) {
         _ref = this.editor.completers, this.completers.snippets.comp = _ref[0], this.completers.text.comp = _ref[1], this.completers.keywords.comp = _ref[2];
       }
-      if (this.options.snippets) {
+      if (this.options.completers.snippets) {
         this.completers.snippets = {
           pos: 0
         };
         this.completers.snippets.comp = require('./completers/snippets')(this.snippetManager, this.options.autoLineEndings);
       }
-      if (this.options.text) {
+      if (this.options.completers.text) {
         this.completers.text = {
           pos: 1
         };
-        this.completers.text.comp = require('./completers/text')(this.editor, this.bgTokenizer);
+        this.completers.text.comp = require('./completers/text')(this.editor, this.bgTokenizer, this.completers.snippets.comp);
       }
-      if (this.options.keywords) {
+      if (this.options.completers.keywords) {
         return this.completers.keywords = {
           pos: 2
         };
@@ -450,7 +471,6 @@
           if (typeof value !== 'boolean') {
             return;
           }
-          this.options.snippets = value;
           this.options.completers.snippets = value;
           this.setAceOptions();
           this.activateCompleter('snippets');
@@ -497,7 +517,7 @@
 
     Zatanna.prototype.doLiveCompletion = function(e) {
       var Autocomplete, TokenIterator, editor, hasCompleter, pos, prefix, text, token, _base, _ref;
-      if (!(this.options.basic || this.options.snippets || this.options.liveCompletion)) {
+      if (!(this.options.basic || this.options.completers.snippets || this.options.liveCompletion)) {
         return;
       }
       TokenIterator = TokenIterator || ace.require('ace/token_iterator').TokenIterator;

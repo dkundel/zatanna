@@ -63,4 +63,5 @@ module.exports = (SnippetManager, autoLineEndings) ->
           score: (score caption, word) + 0.1
           meta: s.meta or (if s.tabTrigger and not s.name then s.tabTrigger + '\u21E5' else 'snippets')
     , @
+    @completions = completions
     callback null, completions

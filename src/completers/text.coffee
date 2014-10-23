@@ -2,7 +2,7 @@ fuzzaldrin = require 'fuzzaldrin'
 
 splitRegex = /[^a-zA-Z_0-9\$\-\u00C0-\u1FFF\u2C00-\uD7FF\w]+/
 
-module.exports = (editor, bgTokenizer) ->
+module.exports = (editor, bgTokenizer, snippetsCompleter) ->
   {Range} = ace.require 'ace/range'
   
   dictionary = []
@@ -24,7 +24,7 @@ module.exports = (editor, bgTokenizer) ->
         newDictionary.push 
           caption: tok.value
           value: tok.value
-          meta: 'local'
+          meta: 'press enter'
     dictionary = _.uniq newDictionary, (el) ->
       el.value
 
@@ -35,8 +35,12 @@ module.exports = (editor, bgTokenizer) ->
     noLines = session.getLength()
     word = getCurrentWord session, pos
     completions = fuzzaldrin.filter dictionary, word, key: 'value'
+    # Don't overrite snippets
+    if snippetsCompleter?.completions?
+      snippetCompletions = snippetsCompleter.completions.map (comp) -> comp.caption
+      completions = (comp for comp in completions when comp.caption not in snippetCompletions)
     for suggestion in completions
-      suggestion.score = fuzzaldrin.score suggestion.value, word     
+      suggestion.score = fuzzaldrin.score suggestion.value, word
     callback null, completions
 
 checkToken = (token) ->
