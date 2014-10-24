@@ -52,6 +52,9 @@
         if (autoLineEndings[lang] && snippetLines === 0 && /^\s*$/.test(lineSuffix)) {
           snippet += autoLineEndings[lang];
         }
+        if (lineSuffix.length === 0 && snippetLines === 0 && !/\$\{/.test(snippet)) {
+          snippet += "\n${1:}";
+        }
       }
       return snippet;
     };

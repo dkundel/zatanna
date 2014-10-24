@@ -180,15 +180,6 @@ module.exports = class Zatanna
           $('.ace_autocomplete').css('font-size', @options.popupFontSizePx + 'px') if @options.popupFontSizePx?
           $('.ace_autocomplete').css('width', @options.popupWidthPx + 'px') if @options.popupWidthPx?
           editor.completer.popup.resize?()
-    # TODO: automatically moving the cursor to a newline after autocomplete needs work
-    # else if e.command.name is 'Return'
-    #   pos = editor.getCursorPosition()
-    #   line = editor.session.getLine(pos.row)
-    #   if pos.column is line.length
-    #     # TODO: extra newline if inline autocomplete, then cmd-right, then enter
-    #     editor.insert '\n'
-    #     line = editor.session.getLine(pos.row + 1)
-    #     editor.moveCursorTo pos.row + 1, line.length
 
   getCompletionPrefix: (editor) ->
     util = util or ace.require 'ace/autocomplete/util'

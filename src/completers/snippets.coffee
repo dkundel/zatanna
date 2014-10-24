@@ -32,15 +32,18 @@ module.exports = (SnippetManager, autoLineEndings) ->
         linePrefix = ''
       snippetSuffix = snippet.substring snippetPrefix.length + caption.length
       lineSuffix = line.substr pos.column, snippetSuffix.length
+      # TODO: Does not handle partial lineSuffix. E.g. this.moveR); => this.moveRight());
       if snippetPrefix.length > 0 and snippetPrefix is linePrefix
         snippet = snippet.slice snippetPrefix.length 
       if snippetSuffix.length > 0 and snippetSuffix is lineSuffix
         snippet = snippet.slice 0, snippet.length - snippetSuffix.length
-      
-      # Append automatic line ending if no line suffix and at end of line
-      # Don't apply to multi-line snippets
-      if autoLineEndings[lang] and snippetLines is 0 and /^\s*$/.test(lineSuffix)
-        snippet += autoLineEndings[lang]
+
+      # Append automatic line ending if no line suffix, at end of line, and not multi-line snippet
+      snippet += autoLineEndings[lang] if autoLineEndings[lang] and snippetLines is 0 and /^\s*$/.test(lineSuffix)
+
+      # Move to next line if at end of line, single line snippet, and no snippet tokens
+      snippet += "\n${1:}" if lineSuffix.length is 0 and snippetLines is 0 and not /\$\{/.test(snippet)
+        
       # console.log "Zatanna snippetPrefix=#{snippetPrefix} linePrefix=#{linePrefix} snippetSuffix=#{snippetSuffix} lineSuffix=#{lineSuffix} snippet=#{snippet}"
     snippet
 
