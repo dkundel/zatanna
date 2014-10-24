@@ -7,9 +7,11 @@
  */
 
 (function() {
-  var score;
+  var lineBreak, score;
 
   score = require('fuzzaldrin').score;
+
+  lineBreak = /\r\n|[\n\r\u2028\u2029]/g;
 
   module.exports = function(SnippetManager, autoLineEndings) {
     var Range, getCurrentWord, scrubSnippet, util;
@@ -29,8 +31,9 @@
       return text = text.substring(start, end);
     };
     scrubSnippet = function(snippet, caption, line, prefix, pos, lang) {
-      var captionStart, linePrefix, lineSuffix, prefixStart, snippetPrefix, snippetSuffix;
+      var captionStart, linePrefix, lineSuffix, prefixStart, snippetLines, snippetPrefix, snippetSuffix;
       if (prefixStart = snippet.toLowerCase().indexOf(prefix.toLowerCase()) > -1) {
+        snippetLines = (snippet.match(lineBreak) || []).length;
         captionStart = snippet.indexOf(caption);
         snippetPrefix = snippet.substring(0, captionStart);
         if (pos.column - prefix.length - snippetPrefix.length >= 0) {
@@ -46,7 +49,7 @@
         if (snippetSuffix.length > 0 && snippetSuffix === lineSuffix) {
           snippet = snippet.slice(0, snippet.length - snippetSuffix.length);
         }
-        if (autoLineEndings[lang] && /^\s*$/.test(lineSuffix)) {
+        if (autoLineEndings[lang] && snippetLines === 0 && /^\s*$/.test(lineSuffix)) {
           snippet += autoLineEndings[lang];
         }
       }

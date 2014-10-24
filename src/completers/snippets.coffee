@@ -5,6 +5,8 @@
 ###
 {score} = require 'fuzzaldrin'
 
+lineBreak = /\r\n|[\n\r\u2028\u2029]/g
+
 module.exports = (SnippetManager, autoLineEndings) ->
   {Range} = ace.require 'ace/range'
   util = ace.require 'ace/autocomplete/util'
@@ -21,6 +23,7 @@ module.exports = (SnippetManager, autoLineEndings) ->
     # console.log "Zatanna snippet=#{snippet} caption=#{caption} line=#{line} prefix=#{prefix} pos.column=#{pos.column} lang=#{lang}"
     # trim snippet prefix and suffix if already in the document (line)
     if prefixStart = snippet.toLowerCase().indexOf(prefix.toLowerCase()) > -1
+      snippetLines = (snippet.match(lineBreak) || []).length
       captionStart = snippet.indexOf caption
       snippetPrefix = snippet.substring 0, captionStart
       if pos.column - prefix.length - snippetPrefix.length >= 0
@@ -34,8 +37,9 @@ module.exports = (SnippetManager, autoLineEndings) ->
       if snippetSuffix.length > 0 and snippetSuffix is lineSuffix
         snippet = snippet.slice 0, snippet.length - snippetSuffix.length
       
-      # append automatic line ending if no line suffix and at end of line
-      if autoLineEndings[lang] and /^\s*$/.test(lineSuffix)
+      # Append automatic line ending if no line suffix and at end of line
+      # Don't apply to multi-line snippets
+      if autoLineEndings[lang] and snippetLines is 0 and /^\s*$/.test(lineSuffix)
         snippet += autoLineEndings[lang]
       # console.log "Zatanna snippetPrefix=#{snippetPrefix} linePrefix=#{linePrefix} snippetSuffix=#{snippetSuffix} lineSuffix=#{lineSuffix} snippet=#{snippet}"
     snippet
