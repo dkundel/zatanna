@@ -171,6 +171,18 @@ module.exports = class Zatanna
         unless (editor.completer)
           # Create new autocompleter
           Autocomplete = ace.require('ace/autocomplete').Autocomplete
+
+          # Overwrite "Shift-Return" command to Esc instead
+          # TODO: Need a better way to update this command.  This is super shady.
+          # TODO: Shift-Return errors when Autocomplete is open, dying on this call:
+          # TODO: calls editor.completer.insertMatch(true) in lib/ace/autocomplete.js
+          # TODO: Also, best case would be to dismiss the Autocomplete and not eat the Shift-Return for the host.
+          if Autocomplete?.prototype?.commands?
+            if "Esc" of Autocomplete.prototype.commands
+              Autocomplete.prototype.commands["Shift-Return"] = Autocomplete.prototype.commands["Esc"]
+            else
+              delete Autocomplete.prototype.commands["Shift-Return"]
+
           editor.completer = new Autocomplete()
         # Disable autoInsert
         editor.completer.autoSelect = true

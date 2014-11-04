@@ -522,7 +522,7 @@
     };
 
     Zatanna.prototype.doLiveCompletion = function(e) {
-      var Autocomplete, TokenIterator, editor, hasCompleter, pos, prefix, text, token, _base, _ref;
+      var Autocomplete, TokenIterator, editor, hasCompleter, pos, prefix, text, token, _base, _ref, _ref1;
       if (!(this.options.basic || this.options.completers.snippets || this.options.liveCompletion)) {
         return;
       }
@@ -544,6 +544,13 @@
         if (prefix && !hasCompleter) {
           if (!editor.completer) {
             Autocomplete = ace.require('ace/autocomplete').Autocomplete;
+            if ((Autocomplete != null ? (_ref1 = Autocomplete.prototype) != null ? _ref1.commands : void 0 : void 0) != null) {
+              if ("Esc" in Autocomplete.prototype.commands) {
+                Autocomplete.prototype.commands["Shift-Return"] = Autocomplete.prototype.commands["Esc"];
+              } else {
+                delete Autocomplete.prototype.commands["Shift-Return"];
+              }
+            }
             editor.completer = new Autocomplete();
           }
           editor.completer.autoSelect = true;
