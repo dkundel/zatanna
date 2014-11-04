@@ -556,7 +556,8 @@
           editor.completer.autoSelect = true;
           editor.completer.autoInsert = false;
           editor.completer.showPopup(editor);
-          if ((editor.completer.popup != null) && ((this.options.popupFontSizePx != null) || (this.options.popupWidthPx != null))) {
+          if (editor.completer.popup != null) {
+            $('.ace_autocomplete').find('.ace_content').css('cursor', 'pointer');
             if (this.options.popupFontSizePx != null) {
               $('.ace_autocomplete').css('font-size', this.options.popupFontSizePx + 'px');
             }

@@ -188,7 +188,8 @@ module.exports = class Zatanna
         editor.completer.autoSelect = true
         editor.completer.autoInsert = false
         editor.completer.showPopup(editor)
-        if editor.completer.popup? and (@options.popupFontSizePx? or @options.popupWidthPx?)
+        if editor.completer.popup?
+          $('.ace_autocomplete').find('.ace_content').css('cursor', 'pointer')
           $('.ace_autocomplete').css('font-size', @options.popupFontSizePx + 'px') if @options.popupFontSizePx?
           $('.ace_autocomplete').css('width', @options.popupWidthPx + 'px') if @options.popupWidthPx?
           editor.completer.popup.resize?()
