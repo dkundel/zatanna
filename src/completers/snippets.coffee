@@ -108,6 +108,8 @@ scrubSnippet = (snippet, caption, line, input, pos, lang, autoLineEndings) ->
     lineSuffix = line.substr pos.column, snippetSuffix.length - 1 + caption.length - input.length + 1
     lineSuffix = '' if snippet.indexOf(lineSuffix) < 0
 
+    # TODO: This is broken for attack(find in Python, but seems ok in JavaScript.
+
     # Don't eat existing matched parentheses
     # console.log 'Zatanna checking parentheses', pos.column, input.length, line[pos.column - input.length], line.length, line[pos.column]
     if pos.column - input.length >= 0 and line[pos.column - input.length] is '(' and pos.column < line.length and line[pos.column] is ')' and lineSuffix is ')'

@@ -152,16 +152,6 @@
     var Range, dictionary, getCurrentWord, handleTokenUpdate;
     Range = ace.require('ace/range').Range;
     dictionary = [];
-    getCurrentWord = function(doc, pos) {
-      var text, textBefore;
-      textBefore = doc.getTextRange(Range.fromPoints({
-        row: 0,
-        column: 0
-      }, pos));
-      text = doc.getValue();
-      text = text.substr(textBefore.length);
-      return text.split(splitRegex)[0];
-    };
     handleTokenUpdate = function(e) {
       var newDictionary, noLines, row, tok, tokens, _i, _j, _len;
       bgTokenizer.setDocument(editor.getSession().getDocument());
@@ -186,6 +176,16 @@
       });
     };
     bgTokenizer.on('update', handleTokenUpdate);
+    getCurrentWord = function(doc, pos) {
+      var text, textBefore;
+      textBefore = doc.getTextRange(Range.fromPoints({
+        row: 0,
+        column: 0
+      }, pos));
+      text = doc.getValue();
+      text = text.substr(textBefore.length);
+      return text.split(splitRegex)[0];
+    };
     return {
       getCompletions: function(editor, session, pos, prefix, callback) {
         var comp, completions, noLines, snippetCompletions, suggestion, word, _i, _len;
@@ -370,30 +370,6 @@
       if (!validationResult.valid) {
         throw new Error("Invalid Zatanna options: " + JSON.stringify(validationResult.errors, null, 4));
       }
-      this.editor.commands.addCommand({
-        name: 'updateTokensOnSpace',
-        bindKey: 'Space',
-        exec: (function(_this) {
-          return function(e) {
-            var lastRow;
-            _this.editor.insert(' ');
-            lastRow = _this.editor.getSession().getLength();
-            return _this.bgTokenizer.fireUpdateEvent(0, lastRow);
-          };
-        })(this)
-      });
-      this.editor.commands.addCommand({
-        name: 'updateTokensOnEnter',
-        bindKey: 'Enter',
-        exec: (function(_this) {
-          return function(e) {
-            var lastRow;
-            _this.editor.insert('\n');
-            lastRow = _this.editor.getSession().getLength();
-            return _this.bgTokenizer.fireUpdateEvent(0, lastRow);
-          };
-        })(this)
-      });
       ace.config.loadModule('ace/ext/language_tools', (function(_this) {
         return function() {
           var aceDocument, highlightRules, tokenizer;
@@ -567,8 +543,8 @@
     };
 
     Zatanna.prototype.doLiveCompletion = function(e) {
-      var Autocomplete, TokenIterator, editor, hasCompleter, pos, prefix, text, token, _base, _ref, _ref1;
-      if (!(this.options.basic || this.options.completers.snippets || this.options.liveCompletion)) {
+      var Autocomplete, TokenIterator, editor, hasCompleter, pos, prefix, text, token, _base, _ref, _ref1, _ref2, _ref3;
+      if (!(this.options.basic || this.options.liveCompletion || this.options.completers.snippets || this.options.completers.text)) {
         return;
       }
       TokenIterator = TokenIterator || ace.require('ace/token_iterator').TokenIterator;
@@ -577,41 +553,47 @@
       hasCompleter = editor.completer && editor.completer.activated;
       if (e.command.name === "backspace") {
         if (hasCompleter && !this.getCompletionPrefix(editor)) {
-          return (_ref = editor.completer) != null ? _ref.detach() : void 0;
+          if ((_ref = editor.completer) != null) {
+            _ref.detach();
+          }
         }
       } else if (e.command.name === "insertstring") {
         pos = editor.getCursorPosition();
         token = (new TokenIterator(editor.getSession(), pos.row, pos.column)).getCurrentToken();
-        if ((token == null) || token.type === 'comment' || token.type === 'string') {
-          return;
-        }
-        prefix = this.getCompletionPrefix(editor);
-        if (prefix && !hasCompleter) {
-          if (!editor.completer) {
-            Autocomplete = ace.require('ace/autocomplete').Autocomplete;
-            if ((Autocomplete != null ? (_ref1 = Autocomplete.prototype) != null ? _ref1.commands : void 0 : void 0) != null) {
-              if ("Esc" in Autocomplete.prototype.commands) {
-                Autocomplete.prototype.commands["Shift-Return"] = Autocomplete.prototype.commands["Esc"];
-              } else {
-                delete Autocomplete.prototype.commands["Shift-Return"];
+        if ((token != null) && ((_ref1 = token.type) !== 'comment' && _ref1 !== 'string')) {
+          prefix = this.getCompletionPrefix(editor);
+          if (prefix && !hasCompleter) {
+            if (!editor.completer) {
+              Autocomplete = ace.require('ace/autocomplete').Autocomplete;
+              if ((Autocomplete != null ? (_ref2 = Autocomplete.prototype) != null ? _ref2.commands : void 0 : void 0) != null) {
+                if ("Esc" in Autocomplete.prototype.commands) {
+                  Autocomplete.prototype.commands["Shift-Return"] = Autocomplete.prototype.commands["Esc"];
+                } else {
+                  delete Autocomplete.prototype.commands["Shift-Return"];
+                }
+              }
+              editor.completer = new Autocomplete();
+            }
+            editor.completer.autoSelect = true;
+            editor.completer.autoInsert = false;
+            editor.completer.showPopup(editor);
+            if (editor.completer.popup != null) {
+              $('.ace_autocomplete').find('.ace_content').css('cursor', 'pointer');
+              if (this.options.popupFontSizePx != null) {
+                $('.ace_autocomplete').css('font-size', this.options.popupFontSizePx + 'px');
+              }
+              if (this.options.popupWidthPx != null) {
+                $('.ace_autocomplete').css('width', this.options.popupWidthPx + 'px');
+              }
+              if (typeof (_base = editor.completer.popup).resize === "function") {
+                _base.resize();
               }
             }
-            editor.completer = new Autocomplete();
-          }
-          editor.completer.autoSelect = true;
-          editor.completer.autoInsert = false;
-          editor.completer.showPopup(editor);
-          if (editor.completer.popup != null) {
-            $('.ace_autocomplete').find('.ace_content').css('cursor', 'pointer');
-            if (this.options.popupFontSizePx != null) {
-              $('.ace_autocomplete').css('font-size', this.options.popupFontSizePx + 'px');
-            }
-            if (this.options.popupWidthPx != null) {
-              $('.ace_autocomplete').css('width', this.options.popupWidthPx + 'px');
-            }
-            return typeof (_base = editor.completer.popup).resize === "function" ? _base.resize() : void 0;
           }
         }
+      }
+      if (this.options.completers.text && ((_ref3 = e.command.name) === 'backspace' || _ref3 === 'del' || _ref3 === 'insertstring' || _ref3 === 'removetolinestart' || _ref3 === 'Enter' || _ref3 === 'Return' || _ref3 === 'Space' || _ref3 === 'Tab')) {
+        return this.bgTokenizer.fireUpdateEvent(0, this.editor.getSession().getLength());
       }
     };
 

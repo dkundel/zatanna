@@ -7,13 +7,8 @@ module.exports = (editor, bgTokenizer, snippetsCompleter) ->
   
   dictionary = []
 
-  getCurrentWord = (doc, pos) ->
-    textBefore = doc.getTextRange(Range.fromPoints({row: 0, column:0}, pos))
-    text = doc.getValue()
-    text = text.substr textBefore.length
-    text.split(splitRegex)[0]
-
   handleTokenUpdate = (e) ->
+    # console.log 'Zatanna text handleTokenUpdate', e
     bgTokenizer.setDocument editor.getSession().getDocument()
     newDictionary = []
     noLines = e.data.last
@@ -25,10 +20,16 @@ module.exports = (editor, bgTokenizer, snippetsCompleter) ->
           caption: tok.value
           value: tok.value
           meta: 'press enter'
-    dictionary = _.uniq newDictionary, (el) ->
-      el.value
+    dictionary = _.uniq newDictionary, (el) -> el.value
+    # console.log 'Zatanna text handleTokenUpdate dictionary', dictionary
 
   bgTokenizer.on 'update', handleTokenUpdate
+
+  getCurrentWord = (doc, pos) ->
+    textBefore = doc.getTextRange(Range.fromPoints({row: 0, column:0}, pos))
+    text = doc.getValue()
+    text = text.substr textBefore.length
+    text.split(splitRegex)[0]
 
   getCompletions: (editor, session, pos, prefix, callback) ->
     completions = []

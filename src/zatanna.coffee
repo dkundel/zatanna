@@ -29,24 +29,6 @@ module.exports = class Zatanna
     unless validationResult.valid
       throw new Error "Invalid Zatanna options: " + JSON.stringify(validationResult.errors, null, 4)
 
-    # update tokens when ever a space is hit
-    @editor.commands.addCommand
-      name: 'updateTokensOnSpace'
-      bindKey: 'Space'
-      exec: (e) =>
-        @editor.insert ' '
-        lastRow = @editor.getSession().getLength()
-        @bgTokenizer.fireUpdateEvent 0, lastRow
-
-    # update tokens when ever an enter is hit
-    @editor.commands.addCommand
-      name: 'updateTokensOnEnter'
-      bindKey: 'Enter'
-      exec: (e) =>
-        @editor.insert '\n'
-        lastRow = @editor.getSession().getLength()
-        @bgTokenizer.fireUpdateEvent 0, lastRow
-
     ace.config.loadModule 'ace/ext/language_tools', () =>
       @snippetManager = ace.require('ace/snippets').snippetManager
 
@@ -160,7 +142,8 @@ module.exports = class Zatanna
 
   doLiveCompletion: (e) =>
     # console.log 'Zatanna doLiveCompletion', e
-    return unless @options.basic or @options.completers.snippets or @options.liveCompletion
+    return unless @options.basic or @options.liveCompletion or @options.completers.snippets or @options.completers.text
+
     TokenIterator = TokenIterator or ace.require('ace/token_iterator').TokenIterator
     editor = e.editor
     text = e.args or ""
@@ -173,35 +156,39 @@ module.exports = class Zatanna
     else if e.command.name is "insertstring"
       pos = editor.getCursorPosition()
       token = (new TokenIterator editor.getSession(), pos.row, pos.column).getCurrentToken()
-      return if (not token? or token.type is 'comment' or token.type is 'string')
-      prefix = @getCompletionPrefix editor
-      # Only autocomplete if there's a prefix that can be matched
-      if (prefix and not hasCompleter)
-        unless (editor.completer)
-          # Create new autocompleter
-          Autocomplete = ace.require('ace/autocomplete').Autocomplete
+      if token? and token.type not in ['comment', 'string']
+        prefix = @getCompletionPrefix editor
+        # Only autocomplete if there's a prefix that can be matched
+        if (prefix and not hasCompleter)
+          unless (editor.completer)
+            # Create new autocompleter
+            Autocomplete = ace.require('ace/autocomplete').Autocomplete
 
-          # Overwrite "Shift-Return" command to Esc instead
-          # TODO: Need a better way to update this command.  This is super shady.
-          # TODO: Shift-Return errors when Autocomplete is open, dying on this call:
-          # TODO: calls editor.completer.insertMatch(true) in lib/ace/autocomplete.js
-          # TODO: Also, best case would be to dismiss the Autocomplete and not eat the Shift-Return for the host.
-          if Autocomplete?.prototype?.commands?
-            if "Esc" of Autocomplete.prototype.commands
-              Autocomplete.prototype.commands["Shift-Return"] = Autocomplete.prototype.commands["Esc"]
-            else
-              delete Autocomplete.prototype.commands["Shift-Return"]
+            # Overwrite "Shift-Return" command to Esc instead
+            # TODO: Need a better way to update this command.  This is super shady.
+            # TODO: Shift-Return errors when Autocomplete is open, dying on this call:
+            # TODO: calls editor.completer.insertMatch(true) in lib/ace/autocomplete.js
+            # TODO: Also, best case would be to dismiss the Autocomplete and not eat the Shift-Return for the host.
+            if Autocomplete?.prototype?.commands?
+              if "Esc" of Autocomplete.prototype.commands
+                Autocomplete.prototype.commands["Shift-Return"] = Autocomplete.prototype.commands["Esc"]
+              else
+                delete Autocomplete.prototype.commands["Shift-Return"]
 
-          editor.completer = new Autocomplete()
-        # Disable autoInsert
-        editor.completer.autoSelect = true
-        editor.completer.autoInsert = false
-        editor.completer.showPopup(editor)
-        if editor.completer.popup?
-          $('.ace_autocomplete').find('.ace_content').css('cursor', 'pointer')
-          $('.ace_autocomplete').css('font-size', @options.popupFontSizePx + 'px') if @options.popupFontSizePx?
-          $('.ace_autocomplete').css('width', @options.popupWidthPx + 'px') if @options.popupWidthPx?
-          editor.completer.popup.resize?()
+            editor.completer = new Autocomplete()
+          # Disable autoInsert
+          editor.completer.autoSelect = true
+          editor.completer.autoInsert = false
+          editor.completer.showPopup(editor)
+          if editor.completer.popup?
+            $('.ace_autocomplete').find('.ace_content').css('cursor', 'pointer')
+            $('.ace_autocomplete').css('font-size', @options.popupFontSizePx + 'px') if @options.popupFontSizePx?
+            $('.ace_autocomplete').css('width', @options.popupWidthPx + 'px') if @options.popupWidthPx?
+            editor.completer.popup.resize?()
+
+    # Update tokens for text completer
+    if @options.completers.text and e.command.name in ['backspace', 'del', 'insertstring', 'removetolinestart', 'Enter', 'Return', 'Space', 'Tab']
+      @bgTokenizer.fireUpdateEvent 0, @editor.getSession().getLength()
 
   getCompletionPrefix: (editor) ->
     # TODO: this is not used to get prefix that is passed to completer.getCompletions
