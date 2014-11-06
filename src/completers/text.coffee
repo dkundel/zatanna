@@ -41,6 +41,7 @@ module.exports = (editor, bgTokenizer, snippetsCompleter) ->
       completions = (comp for comp in completions when comp.caption not in snippetCompletions)
     for suggestion in completions
       suggestion.score = fuzzaldrin.score suggestion.value, word
+    # console.log 'Zatanna text completions', completions
     callback null, completions
 
 checkToken = (token) ->

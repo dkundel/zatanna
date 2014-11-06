@@ -7,68 +7,48 @@
  */
 
 (function() {
-  var lineBreak, score;
+  var getCurrentWord, identifierRegex, lineBreak, score, scrubSnippet;
 
   score = require('fuzzaldrin').score;
 
   lineBreak = /\r\n|[\n\r\u2028\u2029]/g;
 
+  identifierRegex = /[\.a-zA-Z_0-9\$\-\u00A2-\uFFFF]/;
+
   module.exports = function(SnippetManager, autoLineEndings) {
-    var Range, getCurrentWord, scrubSnippet, util;
+    var Range, baseInsertSnippet, util;
     Range = ace.require('ace/range').Range;
     util = ace.require('ace/autocomplete/util');
-    getCurrentWord = function(doc, pos) {
-      var end, start, text;
-      end = pos.column;
-      start = end - 1;
-      text = doc.getLine(pos.row);
-      while (start >= 0 && !text[start].match(/\s+|[\.\@]/)) {
-        start--;
-      }
-      if (start >= 0) {
-        start++;
-      }
-      return text = text.substring(start, end);
-    };
-    scrubSnippet = function(snippet, caption, line, prefix, pos, lang) {
-      var captionStart, linePrefix, lineSuffix, prefixStart, snippetLines, snippetPrefix, snippetSuffix;
-      if (prefixStart = snippet.toLowerCase().indexOf(prefix.toLowerCase()) > -1) {
-        snippetLines = (snippet.match(lineBreak) || []).length;
-        captionStart = snippet.indexOf(caption);
-        snippetPrefix = snippet.substring(0, captionStart);
-        if (pos.column - prefix.length - snippetPrefix.length >= 0) {
-          linePrefix = line.substr(pos.column - prefix.length - snippetPrefix.length, snippetPrefix.length);
-        } else {
-          linePrefix = '';
-        }
-        snippetSuffix = snippet.substring(snippetPrefix.length + caption.length);
-        lineSuffix = line.substr(pos.column, snippetSuffix.length);
-        if (snippetPrefix.length > 0 && snippetPrefix === linePrefix) {
-          snippet = snippet.slice(snippetPrefix.length);
-        }
-        if (snippetSuffix.length > 0 && snippetSuffix === lineSuffix) {
-          snippet = snippet.slice(0, snippet.length - snippetSuffix.length);
-        }
-        if (autoLineEndings[lang] && snippetLines === 0 && /^\s*$/.test(lineSuffix)) {
-          snippet += autoLineEndings[lang];
-        }
-        if (lineSuffix.length === 0 && snippetLines === 0 && !/\$\{/.test(snippet)) {
-          snippet += "\n${1:}";
+    ({
+      identifierRegexps: [identifierRegex]
+    });
+    baseInsertSnippet = SnippetManager.insertSnippet;
+    SnippetManager.insertSnippet = function(editor, snippet) {
+      var cursor, line, prevWord, prevWordIndex, range;
+      cursor = editor.getCursorPosition();
+      if (cursor.column > 0) {
+        line = editor.session.getLine(cursor.row);
+        prevWord = util.retrievePrecedingIdentifier(line, cursor.column - 1, identifierRegex);
+        if (prevWord.length > 0) {
+          prevWordIndex = snippet.toLowerCase().indexOf(prevWord.toLowerCase());
+          if (prevWordIndex > -1 && prevWordIndex < snippet.length) {
+            range = new Range(cursor.row, cursor.column - 1 - prevWord.length, cursor.row, cursor.column);
+            editor.session.remove(range);
+          }
         }
       }
-      return snippet;
+      return baseInsertSnippet.call(this, editor, snippet);
     };
     return {
       getCompletions: function(editor, session, pos, prefix, callback) {
         var completions, lang, line, snippetMap, word, _ref, _ref1;
         lang = (_ref = session.getMode()) != null ? (_ref1 = _ref.$id) != null ? _ref1.substr('ace/mode/'.length) : void 0 : void 0;
         line = session.getLine(pos.row);
-        prefix = util.retrievePrecedingIdentifier(line, pos.column);
         word = getCurrentWord(session, pos);
         snippetMap = SnippetManager.snippetMap;
         completions = [];
         SnippetManager.getActiveScopes(editor).forEach(function(scope) {
-          var caption, s, snippets, _i, _len, _results;
+          var caption, fuzzScore, s, snippet, snippets, _i, _len, _ref2, _results;
           snippets = snippetMap[scope] || [];
           _results = [];
           for (_i = 0, _len = snippets.length; _i < _len; _i++) {
@@ -77,10 +57,11 @@
             if (!caption) {
               continue;
             }
+            _ref2 = scrubSnippet(s.content, caption, line, prefix, pos, lang, autoLineEndings), snippet = _ref2[0], fuzzScore = _ref2[1];
             _results.push(completions.push({
               caption: caption,
-              snippet: scrubSnippet(s.content, caption, line, prefix, pos, lang),
-              score: (score(caption, word)) + 0.1,
+              snippet: snippet,
+              score: fuzzScore,
               meta: s.meta || (s.tabTrigger && !s.name ? s.tabTrigger + '\u21E5' : 'snippets')
             }));
           }
@@ -90,6 +71,70 @@
         return callback(null, completions);
       }
     };
+  };
+
+  getCurrentWord = function(doc, pos) {
+    var end, start, text;
+    end = pos.column;
+    start = end - 1;
+    text = doc.getLine(pos.row);
+    while (start >= 0 && !text[start].match(/\s+|[\.\@]/)) {
+      start--;
+    }
+    if (start >= 0) {
+      start++;
+    }
+    return text.substring(start, end);
+  };
+
+  scrubSnippet = function(snippet, caption, line, input, pos, lang, autoLineEndings) {
+    var captionStart, fuzzScore, linePrefix, linePrefixIndex, lineSuffix, prefixStart, snippetLines, snippetPrefix, snippetPrefixIndex, snippetSuffix;
+    fuzzScore = 0.1;
+    if (prefixStart = snippet.toLowerCase().indexOf(input.toLowerCase()) > -1) {
+      snippetLines = (snippet.match(lineBreak) || []).length;
+      captionStart = snippet.indexOf(caption);
+      snippetPrefix = snippet.substring(0, captionStart);
+      snippetSuffix = snippet.substring(snippetPrefix.length + caption.length);
+      linePrefixIndex = pos.column - input.length - 1;
+      if (linePrefixIndex >= 0 && snippetPrefix.length > 0 && line[linePrefixIndex] === snippetPrefix[snippetPrefix.length - 1]) {
+        snippetPrefixIndex = snippetPrefix.length - 1;
+        while (line[linePrefixIndex] === snippetPrefix[snippetPrefixIndex]) {
+          if (linePrefixIndex === 0 || snippetPrefixIndex === 0) {
+            break;
+          }
+          linePrefixIndex--;
+          snippetPrefixIndex--;
+        }
+        linePrefix = line.substr(linePrefixIndex, pos.column - input.length - linePrefixIndex);
+      } else {
+        linePrefix = '';
+      }
+      lineSuffix = line.substr(pos.column, snippetSuffix.length - 1 + caption.length - input.length + 1);
+      if (snippet.indexOf(lineSuffix) < 0) {
+        lineSuffix = '';
+      }
+      if (pos.column - input.length >= 0 && line[pos.column - input.length] === '(' && pos.column < line.length && line[pos.column] === ')' && lineSuffix === ')') {
+        lineSuffix = '';
+      }
+      fuzzScore += score(snippet, linePrefix + input + lineSuffix);
+      if (snippetPrefix.length > 0 && snippetPrefix === linePrefix) {
+        snippet = snippet.slice(snippetPrefix.length);
+      }
+      if (lineSuffix.length > 0) {
+        snippet = snippet.slice(0, snippet.length - lineSuffix.length);
+      }
+      if (lineSuffix.length === 0 && /^s*$/.test(line.slice(pos.column))) {
+        if (snippetLines === 0 && autoLineEndings[lang]) {
+          snippet += autoLineEndings[lang];
+        }
+        if (snippetLines === 0 && !/\$\{/.test(snippet)) {
+          snippet += "\n";
+        }
+      }
+    } else {
+      fuzzScore += score(snippet, input);
+    }
+    return [snippet, fuzzScore];
   };
 
 }).call(this);
@@ -575,10 +620,10 @@
       util = util || ace.require('ace/autocomplete/util');
       pos = editor.getCursorPosition();
       line = editor.session.getLine(pos.row);
-      prefix = util.retrievePrecedingIdentifier(line, pos.column);
+      prefix = null;
       if ((_ref = editor.completers) != null) {
         _ref.forEach(function(completer) {
-          if ((completer != null ? completer.identifierRegexps : void 0)) {
+          if (completer != null ? completer.identifierRegexps : void 0) {
             return completer.identifierRegexps.forEach(function(identifierRegex) {
               if (!prefix && identifierRegex) {
                 return prefix = util.retrievePrecedingIdentifier(line, pos.column, identifierRegex);
@@ -586,6 +631,9 @@
             });
           }
         });
+      }
+      if (prefix == null) {
+        prefix = util.retrievePrecedingIdentifier(line, pos.column);
       }
       return prefix;
     };

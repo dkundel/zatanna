@@ -1,6 +1,14 @@
 defaults = require './defaults'
 optionsValidator = require './validators/options'
 
+# TODO: Should we be hooking in completers differently?
+# TODO: https://github.com/ajaxorg/ace/blob/f133231df8c1f39156cc230ce31e66103ef4b1e2/lib/ace/ext/language_tools.js#L202
+
+# TODO: Should show popup if we have a snippet match in Autocomplete.filterCompletions
+# TODO: https://github.com/ajaxorg/ace/blob/695e24c41844c17fb2029f073d06338cd73ec33e/lib/ace/autocomplete.js#L449
+
+# TODO: Create list of test cases
+
 module.exports = class Zatanna
   Tokenizer = ''
   BackgroundTokenizer = ''
@@ -151,6 +159,7 @@ module.exports = class Zatanna
     return
 
   doLiveCompletion: (e) =>
+    # console.log 'Zatanna doLiveCompletion', e
     return unless @options.basic or @options.completers.snippets or @options.liveCompletion
     TokenIterator = TokenIterator or ace.require('ace/token_iterator').TokenIterator
     editor = e.editor
@@ -195,16 +204,20 @@ module.exports = class Zatanna
           editor.completer.popup.resize?()
 
   getCompletionPrefix: (editor) ->
+    # TODO: this is not used to get prefix that is passed to completer.getCompletions
+    # TODO: Autocomplete.gatherCompletions is using this (no regex 3rd param):
+    # TODO: var prefix = util.retrievePrecedingIdentifier(line, pos.column);
     util = util or ace.require 'ace/autocomplete/util'
     pos = editor.getCursorPosition()
-    line = editor.session.getLine pos.row 
-    prefix = util.retrievePrecedingIdentifier line, pos.column
+    line = editor.session.getLine pos.row
+    prefix = null
     editor.completers?.forEach (completer) ->
-      if (completer?.identifierRegexps)
+      if completer?.identifierRegexps
         completer.identifierRegexps.forEach (identifierRegex) ->
-          if (not prefix and identifierRegex)
+          if not prefix and identifierRegex
             prefix = util.retrievePrecedingIdentifier line, pos.column, identifierRegex
-    return prefix
+    prefix = util.retrievePrecedingIdentifier line, pos.column unless prefix?
+    prefix
 
 self.Zatanna = Zatanna if self?
 window.Zatanna = Zatanna if window?
