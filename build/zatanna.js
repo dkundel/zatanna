@@ -113,7 +113,7 @@
       if (snippet.indexOf(lineSuffix) < 0) {
         lineSuffix = '';
       }
-      if (pos.column - input.length >= 0 && line[pos.column - input.length] === '(' && pos.column < line.length && line[pos.column] === ')' && lineSuffix === ')') {
+      if (pos.column - input.length >= 0 && line[pos.column - input.length - 1] === '(' && pos.column < line.length && line[pos.column] === ')' && lineSuffix === ')') {
         lineSuffix = '';
       }
       fuzzScore += score(snippet, linePrefix + input + lineSuffix);

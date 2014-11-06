@@ -111,8 +111,8 @@ scrubSnippet = (snippet, caption, line, input, pos, lang, autoLineEndings) ->
     # TODO: This is broken for attack(find in Python, but seems ok in JavaScript.
 
     # Don't eat existing matched parentheses
-    # console.log 'Zatanna checking parentheses', pos.column, input.length, line[pos.column - input.length], line.length, line[pos.column]
-    if pos.column - input.length >= 0 and line[pos.column - input.length] is '(' and pos.column < line.length and line[pos.column] is ')' and lineSuffix is ')'
+    # console.log "Zatanna checking parentheses lineSuffix=#{lineSuffix} pos.column=#{pos.column} input.length=#{input.length}, prevChar=#{line[pos.column - input.length - 1]} line.length=#{line.length} nextChar=#{line[pos.column]}"
+    if pos.column - input.length >= 0 and line[pos.column - input.length - 1] is '(' and pos.column < line.length and line[pos.column] is ')' and lineSuffix is ')'
       lineSuffix = '' 
 
     # Score match before updating snippet
