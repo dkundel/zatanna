@@ -182,11 +182,23 @@ module.exports = class Zatanna
           editor.completer.autoSelect = true
           editor.completer.autoInsert = false
           editor.completer.showPopup(editor)
+          
+          # Update popup CSS after it's been launched
+          # TODO: Popup has original CSS on first load, and then visibly/weirdly changes based on these updates
+          # TODO: Find better way to extend popup.
           if editor.completer.popup?
             $('.ace_autocomplete').find('.ace_content').css('cursor', 'pointer')
             $('.ace_autocomplete').css('font-size', @options.popupFontSizePx + 'px') if @options.popupFontSizePx?
             $('.ace_autocomplete').css('width', @options.popupWidthPx + 'px') if @options.popupWidthPx?
             editor.completer.popup.resize?()
+
+            # TODO: Can't change padding before resize(), but changing it afterwards clears new padding
+            # TODO: Figure out how to hook into events rather than using setTimeout()
+            # fixStuff = =>
+            #   $('.ace_autocomplete').find('.ace_line').css('color', 'purple')
+            #   $('.ace_autocomplete').find('.ace_line').css('padding', '20px')
+            #   # editor.completer.popup.resize?(true)
+            # setTimeout fixStuff, 1000
 
     # Update tokens for text completer
     if @options.completers.text and e.command.name in ['backspace', 'del', 'insertstring', 'removetolinestart', 'Enter', 'Return', 'Space', 'Tab']
