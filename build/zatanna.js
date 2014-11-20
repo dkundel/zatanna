@@ -167,7 +167,7 @@
           newDictionary.push({
             caption: tok.value,
             value: tok.value,
-            meta: 'press enter'
+            meta: 'press tab'
           });
         }
       }
@@ -543,7 +543,7 @@
     };
 
     Zatanna.prototype.doLiveCompletion = function(e) {
-      var Autocomplete, TokenIterator, editor, hasCompleter, pos, prefix, text, token, _base, _ref, _ref1, _ref2, _ref3;
+      var Autocomplete, TokenIterator, editor, exitAndReturn, hasCompleter, pos, prefix, text, token, _base, _ref, _ref1, _ref2, _ref3;
       if (!(this.options.basic || this.options.liveCompletion || this.options.completers.snippets || this.options.completers.text)) {
         return;
       }
@@ -566,11 +566,14 @@
             if (!editor.completer) {
               Autocomplete = ace.require('ace/autocomplete').Autocomplete;
               if ((Autocomplete != null ? (_ref2 = Autocomplete.prototype) != null ? _ref2.commands : void 0 : void 0) != null) {
-                if ("Esc" in Autocomplete.prototype.commands) {
-                  Autocomplete.prototype.commands["Shift-Return"] = Autocomplete.prototype.commands["Esc"];
-                } else {
-                  delete Autocomplete.prototype.commands["Shift-Return"];
-                }
+                exitAndReturn = (function(_this) {
+                  return function(editor) {
+                    editor.completer.detach();
+                    return _this.editor.insert("\n");
+                  };
+                })(this);
+                Autocomplete.prototype.commands["Shift-Return"] = exitAndReturn;
+                Autocomplete.prototype.commands["Return"] = exitAndReturn;
               }
               editor.completer = new Autocomplete();
             }

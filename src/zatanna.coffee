@@ -7,7 +7,7 @@ optionsValidator = require './validators/options'
 # TODO: Should show popup if we have a snippet match in Autocomplete.filterCompletions
 # TODO: https://github.com/ajaxorg/ace/blob/695e24c41844c17fb2029f073d06338cd73ec33e/lib/ace/autocomplete.js#L449
 
-# TODO: Create list of test cases
+# TODO: Create list of manual test cases
 
 module.exports = class Zatanna
   Tokenizer = ''
@@ -39,7 +39,7 @@ module.exports = class Zatanna
       # TODO: Or, SnippetManager's expandSnippetForSelection
       @snippetManager.expandWithTab = -> return false
 
-      # define a background tokenizer that constantly tokenizes the code
+      # Define a background tokenizer that constantly tokenizes the code
       highlightRules = new (@editor.getSession().getMode().HighlightRules)()
       tokenizer = new Tokenizer highlightRules.getRules()
       @bgTokenizer = new BackgroundTokenizer tokenizer, @editor
@@ -164,16 +164,18 @@ module.exports = class Zatanna
             # Create new autocompleter
             Autocomplete = ace.require('ace/autocomplete').Autocomplete
 
-            # Overwrite "Shift-Return" command to Esc instead
+            # Overwrite "Shift-Return" and "Return" command to Esc + Return instead
+            # https://github.com/ajaxorg/ace/blob/695e24c41844c17fb2029f073d06338cd73ec33e/lib/ace/autocomplete.js#L208
             # TODO: Need a better way to update this command.  This is super shady.
             # TODO: Shift-Return errors when Autocomplete is open, dying on this call:
             # TODO: calls editor.completer.insertMatch(true) in lib/ace/autocomplete.js
-            # TODO: Also, best case would be to dismiss the Autocomplete and not eat the Shift-Return for the host.
             if Autocomplete?.prototype?.commands?
-              if "Esc" of Autocomplete.prototype.commands
-                Autocomplete.prototype.commands["Shift-Return"] = Autocomplete.prototype.commands["Esc"]
-              else
-                delete Autocomplete.prototype.commands["Shift-Return"]
+              exitAndReturn = (editor) =>
+                # TODO: Execute a proper Return or Shift-Return instead of simple \n insert
+                editor.completer.detach()
+                @editor.insert "\n"
+              Autocomplete.prototype.commands["Shift-Return"] = exitAndReturn
+              Autocomplete.prototype.commands["Return"] = exitAndReturn
 
             editor.completer = new Autocomplete()
           # Disable autoInsert
