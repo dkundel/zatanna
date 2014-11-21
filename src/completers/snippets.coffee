@@ -4,23 +4,27 @@
   treated better in the autocomplete than local values
 ###
 
-# TODO: "this.moverigh()"
-
 {score} = require 'fuzzaldrin'
 lineBreak = /\r\n|[\n\r\u2028\u2029]/g
 identifierRegex = /[\.a-zA-Z_0-9\$\-\u00A2-\uFFFF]/
+Fuzziac = require '../../assets/fuzziac.js' # https://github.com/stollcri/fuzziac.js
 
 module.exports = (SnippetManager, autoLineEndings) ->
   {Range} = ace.require 'ace/range'
   util = ace.require 'ace/autocomplete/util'
   identifierRegexps: [identifierRegex]
 
+  # Cleanup surrounding text
   baseInsertSnippet = SnippetManager.insertSnippet
   SnippetManager.insertSnippet = (editor, snippet) ->
     # Remove dangling snippet prefixes
     # Examples:
     #   "self self.moveUp()"
     #   "elf.self.moveUp()"
+    #   "ssefl.moveUp()"
+    #   "slef.moveUp()"
+    # TODO: This function is a mess
+    # TODO: Can some of this nonsense be done upstream in scrubSnippet?
     cursor = editor.getCursorPosition()
     if cursor.column > 0
       line = editor.session.getLine cursor.row
@@ -30,6 +34,60 @@ module.exports = (SnippetManager, autoLineEndings) ->
         if prevWordIndex > -1 and prevWordIndex < snippet.length
           range = new Range cursor.row, cursor.column - 1 - prevWord.length, cursor.row, cursor.column
           editor.session.remove range
+        else
+          # console.log "Zatanna cursor.column=#{cursor.column} snippet='#{snippet}' line='#{line}' prevWord='#{prevWord}'"
+          # console.log "Zatanna prevWordIndex=#{prevWordIndex}"
+
+          # Lookup original completion
+          # TODO: Can we identify correct completer somehow?
+          for completer in editor.completers
+            if completer.completions?
+              for completion in completer.completions
+                if completion.snippet is snippet
+                  originalCompletion = completion
+                  break
+              break if originalCompletion
+
+          if originalCompletion?
+            # console.log 'Zatanna original completion', originalCompletion
+            # Get original snippet prefix (accounting for extra '\n' at end)
+            if snippetIndex = originalCompletion.content.indexOf snippet.substr(0, snippet.length - 1)
+              originalPrefix = originalCompletion.content.substring 0, snippetIndex
+            else
+              originalPrefix = ''
+            snippetStart = cursor.column - originalPrefix.length
+            # console.log "Zatanna originalPrefix='#{originalPrefix}' snippetStart=#{snippetStart}"
+            
+            if snippetStart > 0 and snippetStart <= line.length
+              extraIndex = snippetStart - 1
+              # console.log "Zatanna prev char='#{line[extraIndex]}'"
+              
+              if line[extraIndex] is '.'
+                # Fuzzy string match previous word before '.', and remove if a match to beginning of snippet
+                originalObject = originalCompletion.content.substring(0, originalCompletion.content.indexOf('.'))
+                prevObjectIndex = extraIndex - 1
+                # console.log "Zatanna prevObjectIndex=#{prevObjectIndex}"
+                if prevObjectIndex >= 0 and /\w/.test(line[prevObjectIndex])
+                  prevObjectIndex-- while prevObjectIndex >= 0 and /\w/.test(line[prevObjectIndex])
+                  prevObjectIndex++ if prevObjectIndex < 0 or not /\w/.test(line[prevObjectIndex])
+                  # console.log "Zatanna prevObjectIndex=#{prevObjectIndex} extraIndex=#{extraIndex}"
+                  prevObject = line.substring prevObjectIndex, extraIndex
+
+                  fuzzer = new Fuzziac.fuzziac originalObject
+                  if fuzzer
+                    finalScore = fuzzer.score prevObject
+                    # console.log "Zatanna originalObject='#{originalObject}' prevObject='#{prevObject}'", finalScore
+                    if finalScore > 0.5
+                      range = new Range cursor.row, prevObjectIndex, cursor.row, snippetStart
+                      editor.session.remove range
+
+              else if /\w/.test(line[extraIndex])
+                # Remove any alphanumeric characters on this line immediately before prefix
+                extraIndex-- while extraIndex >= 0 and /\w/.test(line[extraIndex])
+                extraIndex++ if extraIndex < 0 or not /\w/.test(line[extraIndex])
+                range = new Range cursor.row, extraIndex, cursor.row, snippetStart
+                editor.session.remove range
+
     baseInsertSnippet.call @, editor, snippet
 
   getCompletions: (editor, session, pos, prefix, callback) ->
@@ -53,6 +111,7 @@ module.exports = (SnippetManager, autoLineEndings) ->
         continue unless caption
         [snippet, fuzzScore] = scrubSnippet s.content, caption, line, prefix, pos, lang, autoLineEndings
         completions.push 
+          content: s.content  # Used internally by Zatanna, not by ace autocomplete
           caption: caption
           snippet: snippet
           score: fuzzScore
