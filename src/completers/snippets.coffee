@@ -182,10 +182,14 @@ scrubSnippet = (snippet, caption, line, input, pos, lang, autoLineEndings) ->
     snippet = snippet.slice 0, snippet.length - lineSuffix.length if lineSuffix.length > 0
 
     # Append automatic line ending and newline
-    if lineSuffix.length is 0 and /^s*$/.test line.slice pos.column
+    # If at end of line
+    # And, no parentheses are before snippet. E.g. 'if ('
+    # console.log "Zatanna autoLineEndings linePrefixIndex='#{linePrefixIndex}'"
+    if lineSuffix.length is 0 and /^\s*$/.test line.slice pos.column
       # console.log 'Zatanna atLineEnd', pos.column, lineSuffix.length, line.slice(pos.column + lineSuffix.length), line
-      snippet += autoLineEndings[lang] if snippetLines is 0 and autoLineEndings[lang]
-      snippet += "\n" if snippetLines is 0 and not /\$\{/.test(snippet)
+      if linePrefixIndex < 0 or linePrefixIndex >= 0 and not /[\(\)]/.test(line.substring(0, linePrefixIndex + 1))
+        snippet += autoLineEndings[lang] if snippetLines is 0 and autoLineEndings[lang]
+        snippet += "\n" if snippetLines is 0 and not /\$\{/.test(snippet)
 
     # console.log "Zatanna snippetPrefix=#{snippetPrefix} linePrefix=#{linePrefix} snippetSuffix=#{snippetSuffix} lineSuffix=#{lineSuffix} snippet=#{snippet} score=#{fuzzScore}"
   else

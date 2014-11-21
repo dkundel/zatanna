@@ -683,12 +683,14 @@ module.exports.fuzziac = fuzziac;
       if (lineSuffix.length > 0) {
         snippet = snippet.slice(0, snippet.length - lineSuffix.length);
       }
-      if (lineSuffix.length === 0 && /^s*$/.test(line.slice(pos.column))) {
-        if (snippetLines === 0 && autoLineEndings[lang]) {
-          snippet += autoLineEndings[lang];
-        }
-        if (snippetLines === 0 && !/\$\{/.test(snippet)) {
-          snippet += "\n";
+      if (lineSuffix.length === 0 && /^\s*$/.test(line.slice(pos.column))) {
+        if (linePrefixIndex < 0 || linePrefixIndex >= 0 && !/[\(\)]/.test(line.substring(0, linePrefixIndex + 1))) {
+          if (snippetLines === 0 && autoLineEndings[lang]) {
+            snippet += autoLineEndings[lang];
+          }
+          if (snippetLines === 0 && !/\$\{/.test(snippet)) {
+            snippet += "\n";
+          }
         }
       }
     } else {
