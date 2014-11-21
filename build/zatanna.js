@@ -1103,7 +1103,7 @@ module.exports.fuzziac = fuzziac;
     };
 
     Zatanna.prototype.doLiveCompletion = function(e) {
-      var Autocomplete, TokenIterator, editor, exitAndReturn, hasCompleter, pos, prefix, text, token, _base, _ref, _ref1, _ref2, _ref3;
+      var Autocomplete, TokenIterator, editor, exitAndReturn, hasCompleter, pos, prefix, text, token, _base, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
       if (!(this.options.basic || this.options.liveCompletion || this.options.completers.snippets || this.options.completers.text)) {
         return;
       }
@@ -1140,7 +1140,9 @@ module.exports.fuzziac = fuzziac;
             editor.completer.autoSelect = true;
             editor.completer.autoInsert = false;
             editor.completer.showPopup(editor);
-            if (editor.completer.popup != null) {
+            if (((_ref3 = editor.completer) != null ? (_ref4 = _ref3.completions) != null ? (_ref5 = _ref4.filtered) != null ? _ref5.length : void 0 : void 0 : void 0) > 10) {
+              editor.completer.detach();
+            } else if (editor.completer.popup != null) {
               $('.ace_autocomplete').find('.ace_content').css('cursor', 'pointer');
               if (this.options.popupFontSizePx != null) {
                 $('.ace_autocomplete').css('font-size', this.options.popupFontSizePx + 'px');
@@ -1155,7 +1157,7 @@ module.exports.fuzziac = fuzziac;
           }
         }
       }
-      if (this.options.completers.text && ((_ref3 = e.command.name) === 'backspace' || _ref3 === 'del' || _ref3 === 'insertstring' || _ref3 === 'removetolinestart' || _ref3 === 'Enter' || _ref3 === 'Return' || _ref3 === 'Space' || _ref3 === 'Tab')) {
+      if (this.options.completers.text && ((_ref6 = e.command.name) === 'backspace' || _ref6 === 'del' || _ref6 === 'insertstring' || _ref6 === 'removetolinestart' || _ref6 === 'Enter' || _ref6 === 'Return' || _ref6 === 'Space' || _ref6 === 'Tab')) {
         return this.bgTokenizer.fireUpdateEvent(0, this.editor.getSession().getLength());
       }
     };

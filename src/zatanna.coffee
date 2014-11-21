@@ -161,6 +161,7 @@ module.exports = class Zatanna
         # Only autocomplete if there's a prefix that can be matched
         if (prefix and not hasCompleter)
           unless (editor.completer)
+
             # Create new autocompleter
             Autocomplete = ace.require('ace/autocomplete').Autocomplete
 
@@ -178,15 +179,22 @@ module.exports = class Zatanna
               Autocomplete.prototype.commands["Return"] = exitAndReturn
 
             editor.completer = new Autocomplete()
-          # Disable autoInsert
+
+          # Disable autoInsert and show popup
           editor.completer.autoSelect = true
           editor.completer.autoInsert = false
           editor.completer.showPopup(editor)
-          
+
+          # Hide popup if more than 10 suggestions
+          # TODO: Completions aren't asked for unless we show popup, so this is super hacky
+          # TODO: Backspacing to yield more suggestions does not close popup
+          if editor.completer?.completions?.filtered?.length > 10
+            editor.completer.detach()
+
           # Update popup CSS after it's been launched
           # TODO: Popup has original CSS on first load, and then visibly/weirdly changes based on these updates
           # TODO: Find better way to extend popup.
-          if editor.completer.popup?
+          else if editor.completer.popup?
             $('.ace_autocomplete').find('.ace_content').css('cursor', 'pointer')
             $('.ace_autocomplete').css('font-size', @options.popupFontSizePx + 'px') if @options.popupFontSizePx?
             $('.ace_autocomplete').css('width', @options.popupWidthPx + 'px') if @options.popupWidthPx?
