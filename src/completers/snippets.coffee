@@ -50,8 +50,12 @@ module.exports = (SnippetManager, autoLineEndings) ->
 
           if originalCompletion?
             # console.log 'Zatanna original completion', originalCompletion
-            # Get original snippet prefix (accounting for extra '\n' at end)
-            if snippetIndex = originalCompletion.content.indexOf snippet.substr(0, snippet.length - 1)
+            # Get original snippet prefix (accounting for extra '\n' and possibly autoLineEndings at end)
+            lang = editor.session.getMode()?.$id?.substr 'ace/mode/'.length
+            # console.log 'Zatanna lang', lang, autoLineEndings[lang]?.length
+            extraEndLength = 1
+            extraEndLength += autoLineEndings[lang].length if autoLineEndings[lang]?
+            if snippetIndex = originalCompletion.content.indexOf snippet.substr(0, snippet.length - extraEndLength)
               originalPrefix = originalCompletion.content.substring 0, snippetIndex
             else
               originalPrefix = ''

@@ -524,7 +524,7 @@ module.exports.fuzziac = fuzziac;
     });
     baseInsertSnippet = SnippetManager.insertSnippet;
     SnippetManager.insertSnippet = function(editor, snippet) {
-      var completer, completion, cursor, extraIndex, finalScore, fuzzer, line, originalCompletion, originalObject, originalPrefix, prevObject, prevObjectIndex, prevWord, prevWordIndex, range, snippetIndex, snippetStart, _i, _j, _len, _len1, _ref, _ref1;
+      var completer, completion, cursor, extraEndLength, extraIndex, finalScore, fuzzer, lang, line, originalCompletion, originalObject, originalPrefix, prevObject, prevObjectIndex, prevWord, prevWordIndex, range, snippetIndex, snippetStart, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3;
       cursor = editor.getCursorPosition();
       if (cursor.column > 0) {
         line = editor.session.getLine(cursor.row);
@@ -553,7 +553,12 @@ module.exports.fuzziac = fuzziac;
               }
             }
             if (originalCompletion != null) {
-              if (snippetIndex = originalCompletion.content.indexOf(snippet.substr(0, snippet.length - 1))) {
+              lang = (_ref2 = editor.session.getMode()) != null ? (_ref3 = _ref2.$id) != null ? _ref3.substr('ace/mode/'.length) : void 0 : void 0;
+              extraEndLength = 1;
+              if (autoLineEndings[lang] != null) {
+                extraEndLength += autoLineEndings[lang].length;
+              }
+              if (snippetIndex = originalCompletion.content.indexOf(snippet.substr(0, snippet.length - extraEndLength))) {
                 originalPrefix = originalCompletion.content.substring(0, snippetIndex);
               } else {
                 originalPrefix = '';
