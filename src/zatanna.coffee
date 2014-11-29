@@ -140,9 +140,13 @@ module.exports = class Zatanna
         @activateCompleter()
     return
 
+  on: -> @paused = false
+  off: -> @paused = true
+
   doLiveCompletion: (e) =>
     # console.log 'Zatanna doLiveCompletion', e
     return unless @options.basic or @options.liveCompletion or @options.completers.snippets or @options.completers.text
+    return if @paused
 
     TokenIterator = TokenIterator or ace.require('ace/token_iterator').TokenIterator
     editor = e.editor

@@ -1109,9 +1109,20 @@ module.exports.fuzziac = fuzziac;
       }
     };
 
+    Zatanna.prototype.on = function() {
+      return this.paused = false;
+    };
+
+    Zatanna.prototype.off = function() {
+      return this.paused = true;
+    };
+
     Zatanna.prototype.doLiveCompletion = function(e) {
       var Autocomplete, TokenIterator, editor, exitAndReturn, hasCompleter, pos, prefix, text, token, _base, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
       if (!(this.options.basic || this.options.liveCompletion || this.options.completers.snippets || this.options.completers.text)) {
+        return;
+      }
+      if (this.paused) {
         return;
       }
       TokenIterator = TokenIterator || ace.require('ace/token_iterator').TokenIterator;
