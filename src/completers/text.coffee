@@ -19,7 +19,7 @@ module.exports = (editor, bgTokenizer, snippetsCompleter) ->
         newDictionary.push 
           caption: tok.value
           value: tok.value
-          meta: 'press tab'
+          meta: 'press enter'
     dictionary = _.uniq newDictionary, (el) -> el.value
     # console.log 'Zatanna text handleTokenUpdate dictionary', dictionary
 

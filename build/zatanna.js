@@ -734,7 +734,7 @@ module.exports.fuzziac = fuzziac;
           newDictionary.push({
             caption: tok.value,
             value: tok.value,
-            meta: 'press tab'
+            meta: 'press enter'
           });
         }
       }
@@ -1151,7 +1151,6 @@ module.exports.fuzziac = fuzziac;
                   };
                 })(this);
                 Autocomplete.prototype.commands["Shift-Return"] = exitAndReturn;
-                Autocomplete.prototype.commands["Return"] = exitAndReturn;
               }
               editor.completer = new Autocomplete();
             }
