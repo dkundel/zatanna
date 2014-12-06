@@ -40,6 +40,11 @@ module.exports = (editor, bgTokenizer, snippetsCompleter) ->
     if snippetsCompleter?.completions?
       snippetCompletions = snippetsCompleter.completions.map (comp) -> comp.caption
       completions = (comp for comp in completions when comp.caption not in snippetCompletions)
+
+    # Never autocomplete 'var' with this completer
+    # TODO: Ridiculous hack to fix JavaScript quickly
+    completions = (comp for comp in completions when comp.caption isnt 'var')
+
     for suggestion in completions
       suggestion.score = fuzzaldrin.score suggestion.value, word
     # console.log 'Zatanna text completions', completions

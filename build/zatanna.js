@@ -778,6 +778,17 @@ module.exports.fuzziac = fuzziac;
             return _results;
           })();
         }
+        completions = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = completions.length; _i < _len; _i++) {
+            comp = completions[_i];
+            if (comp.caption !== 'var') {
+              _results.push(comp);
+            }
+          }
+          return _results;
+        })();
         for (_i = 0, _len = completions.length; _i < _len; _i++) {
           suggestion = completions[_i];
           suggestion.score = fuzzaldrin.score(suggestion.value, word);
