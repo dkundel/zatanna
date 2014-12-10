@@ -16,7 +16,9 @@ module.exports = (editor, bgTokenizer, snippetsCompleter) ->
       tokens = bgTokenizer.getTokens row
       for tok in tokens
         continue unless checkToken tok
-        newDictionary.push 
+        # TODO: Background tokenizer thinks '@' is part of a variable name.
+        tok.value = tok.value.substring(1) if /^@/.test tok.value
+        newDictionary.push
           caption: tok.value
           value: tok.value
           meta: 'press enter'

@@ -731,6 +731,9 @@ module.exports.fuzziac = fuzziac;
           if (!checkToken(tok)) {
             continue;
           }
+          if (/^@/.test(tok.value)) {
+            tok.value = tok.value.substring(1);
+          }
           newDictionary.push({
             caption: tok.value,
             value: tok.value,
