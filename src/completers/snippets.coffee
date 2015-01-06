@@ -30,8 +30,9 @@ module.exports = (SnippetManager, autoLineEndings) ->
       line = editor.session.getLine cursor.row
       prevWord = util.retrievePrecedingIdentifier line, cursor.column - 1, identifierRegex
       if prevWord.length > 0
+        # Remove previous word if it's at the beginning of the snippet
         prevWordIndex = snippet.toLowerCase().indexOf prevWord.toLowerCase()
-        if prevWordIndex > -1 and prevWordIndex < snippet.length
+        if prevWordIndex is 0
           range = new Range cursor.row, cursor.column - 1 - prevWord.length, cursor.row, cursor.column
           editor.session.remove range
         else
@@ -188,10 +189,11 @@ scrubSnippet = (snippet, caption, line, input, pos, lang, autoLineEndings) ->
     # Append automatic line ending and newline
     # If at end of line
     # And, no parentheses are before snippet. E.g. 'if ('
+    # And, line doesn't start with whitespace followed by 'if ' or 'elif '
     # console.log "Zatanna autoLineEndings linePrefixIndex='#{linePrefixIndex}'"
     if lineSuffix.length is 0 and /^\s*$/.test line.slice pos.column
       # console.log 'Zatanna atLineEnd', pos.column, lineSuffix.length, line.slice(pos.column + lineSuffix.length), line
-      if linePrefixIndex < 0 or linePrefixIndex >= 0 and not /[\(\)]/.test(line.substring(0, linePrefixIndex + 1))
+      if linePrefixIndex < 0 or linePrefixIndex >= 0 and not /[\(\)]/.test(line.substring(0, linePrefixIndex + 1)) and not /^[ \t]*(?:if |elif )/.test(line.substring(0, linePrefixIndex + 1))
         snippet += autoLineEndings[lang] if snippetLines is 0 and autoLineEndings[lang]
         snippet += "\n" if snippetLines is 0 and not /\$\{/.test(snippet)
 

@@ -531,7 +531,7 @@ module.exports.fuzziac = fuzziac;
         prevWord = util.retrievePrecedingIdentifier(line, cursor.column - 1, identifierRegex);
         if (prevWord.length > 0) {
           prevWordIndex = snippet.toLowerCase().indexOf(prevWord.toLowerCase());
-          if (prevWordIndex > -1 && prevWordIndex < snippet.length) {
+          if (prevWordIndex === 0) {
             range = new Range(cursor.row, cursor.column - 1 - prevWord.length, cursor.row, cursor.column);
             editor.session.remove(range);
           } else {
@@ -689,7 +689,7 @@ module.exports.fuzziac = fuzziac;
         snippet = snippet.slice(0, snippet.length - lineSuffix.length);
       }
       if (lineSuffix.length === 0 && /^\s*$/.test(line.slice(pos.column))) {
-        if (linePrefixIndex < 0 || linePrefixIndex >= 0 && !/[\(\)]/.test(line.substring(0, linePrefixIndex + 1))) {
+        if (linePrefixIndex < 0 || linePrefixIndex >= 0 && !/[\(\)]/.test(line.substring(0, linePrefixIndex + 1)) && !/^[ \t]*(?:if |elif )/.test(line.substring(0, linePrefixIndex + 1))) {
           if (snippetLines === 0 && autoLineEndings[lang]) {
             snippet += autoLineEndings[lang];
           }
