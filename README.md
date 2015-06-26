@@ -1,4 +1,4 @@
 zatanna
 =======
 
-An extension of Ace implementing changes to make Ace more mobile friendly.
+An extension of Ace implementing better autocomplete
