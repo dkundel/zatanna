@@ -5,7 +5,7 @@
   "authors": [
     "Dominik Kundel <dominik.kundel@gmail.com>"
   ],
-  "description": "Extension of Ace designed to allow mobile programming for CodeCombat",
+  "description": "Extension of Ace designed to support better autocomplete",
   "main": "build/zatanna.min.js",
   "moduleType": [
     "globals"
