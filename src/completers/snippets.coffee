@@ -105,7 +105,13 @@ module.exports = (SnippetManager, autoLineEndings) ->
     # meta: displayed right-justfied in popup
     lang = session.getMode()?.$id?.substr 'ace/mode/'.length
     line = session.getLine pos.row
-    
+
+    #If the prefix is a reserved word, don't autocomplete
+    keywords = session.getMode()?.$highlightRules?.$keywordList
+    if keywords and prefix in keywords
+      @completions = []
+      return callback null, @completions
+
     word = getCurrentWord session, pos
     snippetMap = SnippetManager.snippetMap
     completions = []
