@@ -154,16 +154,16 @@ module.exports = class Zatanna
     hasCompleter = editor.completer and editor.completer.activated
 
     # We don't want to autocomplete with no prefix
-    if e.command.name is "backspace"
-      if (hasCompleter and not @getCompletionPrefix(editor))
-        editor.completer?.detach()
-    else if e.command.name is "insertstring"
+    if e.command.name is "backspace" or e.command.name is "insertstring"
       pos = editor.getCursorPosition()
       token = (new TokenIterator editor.getSession(), pos.row, pos.column).getCurrentToken()
       if token? and token.type not in ['comment', 'string']
         prefix = @getCompletionPrefix editor
+        # Bake a fresh autocomplete every keystroke
+        editor.completer?.detach() if hasCompleter
+
         # Only autocomplete if there's a prefix that can be matched
-        if (prefix and not hasCompleter)
+        if (prefix)
           unless (editor.completer)
 
             # Create new autocompleter

@@ -207,5 +207,16 @@ scrubSnippet = (snippet, caption, line, input, pos, lang, autoLineEndings) ->
   else
     fuzzScore += score snippet, input
 
+  # Prefixing is twice as good as fuzzy mathing?
+  fuzzScore *= 2 if caption.startsWith(input)
+  
+  # All things equal, a shorter snippet is better
+  fuzzScore -= caption.length / 500
+
+  # Exact match is really good.
+  fuzzScore = 10 if caption == input
+  
+  console.log snippet, input, fuzzScore
+
   [snippet, fuzzScore]
 
