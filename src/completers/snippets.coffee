@@ -125,7 +125,7 @@ module.exports = (SnippetManager, autoLineEndings) ->
           content: s.content  # Used internally by Zatanna, not by ace autocomplete
           caption: caption
           snippet: snippet
-          score: fuzzScore
+          score: fuzzScore * s.importance ? 1.0
           meta: s.meta or (if s.tabTrigger and not s.name then s.tabTrigger + '\u21E5' else 'snippets')
     , @
     # console.log 'Zatanna snippet completions', completions
