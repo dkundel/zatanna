@@ -618,7 +618,7 @@ module.exports.fuzziac = fuzziac;
         snippetMap = SnippetManager.snippetMap;
         completions = [];
         SnippetManager.getActiveScopes(editor).forEach(function(scope) {
-          var caption, fuzzScore, s, snippet, snippets, _i, _len, _ref4, _results;
+          var caption, fuzzScore, s, snippet, snippets, _i, _len, _ref4, _ref5, _results;
           snippets = snippetMap[scope] || [];
           _results = [];
           for (_i = 0, _len = snippets.length; _i < _len; _i++) {
@@ -632,7 +632,7 @@ module.exports.fuzziac = fuzziac;
               content: s.content,
               caption: caption,
               snippet: snippet,
-              score: fuzzScore,
+              score: (_ref5 = fuzzScore * s.importance) != null ? _ref5 : 1.0,
               meta: s.meta || (s.tabTrigger && !s.name ? s.tabTrigger + '\u21E5' : 'snippets')
             }));
           }
