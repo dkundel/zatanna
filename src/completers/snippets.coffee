@@ -120,7 +120,7 @@ module.exports = (SnippetManager, autoLineEndings) ->
       for s in snippets
         caption  = s.name or s.tabTrigger
         continue unless caption
-        [snippet, fuzzScore] = scrubSnippet s.content, caption, line, prefix, pos, lang, autoLineEndings
+        [snippet, fuzzScore] = scrubSnippet s.content, caption, line, prefix, pos, lang, autoLineEndings, s.captureReturn
         completions.push 
           content: s.content  # Used internally by Zatanna, not by ace autocomplete
           caption: caption
@@ -150,7 +150,7 @@ getCurrentWord = (doc, pos) ->
   start++ if start >= 0
   text.substring start, end
 
-scrubSnippet = (snippet, caption, line, input, pos, lang, autoLineEndings) ->
+scrubSnippet = (snippet, caption, line, input, pos, lang, autoLineEndings, captureReturn) ->
   # console.log "Zatanna snippet=#{snippet} caption=#{caption} line=#{line} input=#{input} pos.column=#{pos.column} lang=#{lang}"
   fuzzScore = 0.1
   # input will be replaced by snippet
@@ -199,9 +199,14 @@ scrubSnippet = (snippet, caption, line, input, pos, lang, autoLineEndings) ->
     # console.log "Zatanna autoLineEndings linePrefixIndex='#{linePrefixIndex}'"
     if lineSuffix.length is 0 and /^\s*$/.test line.slice pos.column
       # console.log 'Zatanna atLineEnd', pos.column, lineSuffix.length, line.slice(pos.column + lineSuffix.length), line
-      if linePrefixIndex < 0 or linePrefixIndex >= 0 and not /[\(\)]/.test(line.substring(0, linePrefixIndex + 1)) and not /^[ \t]*(?:if |elif )/.test(line.substring(0, linePrefixIndex + 1))
+      toLinePrefix = line.substring 0, linePrefixIndex
+      if linePrefixIndex < 0 or linePrefixIndex >= 0 and not /[\(\)]/.test(toLinePrefix) and not /^[ \t]*(?:if\b|elif\b)/.test(toLinePrefix)
         snippet += autoLineEndings[lang] if snippetLines is 0 and autoLineEndings[lang]
         snippet += "\n" if snippetLines is 0 and not /\$\{/.test(snippet)
+        
+        if captureReturn and /^\s*$/.test(toLinePrefix)
+          snippet = captureReturn + linePrefix + snippet
+          console.log "REFOREGED", snippet
 
     # console.log "Zatanna snippetPrefix=#{snippetPrefix} linePrefix=#{linePrefix} snippetSuffix=#{snippetSuffix} lineSuffix=#{lineSuffix} snippet=#{snippet} score=#{fuzzScore}"
   else
