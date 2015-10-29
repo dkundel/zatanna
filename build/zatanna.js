@@ -930,6 +930,11 @@ module.exports.fuzziac = fuzziac;
           required: false,
           description: 'Font-size in pixels for popup text'
         },
+        popupLineHeightPx: {
+          type: 'number',
+          required: false,
+          description: 'Line-height in pixels for popup text'
+        },
         popupWidthPx: {
           type: 'number',
           required: false,
@@ -1198,6 +1203,9 @@ module.exports.fuzziac = fuzziac;
               $('.ace_autocomplete').find('.ace_content').css('cursor', 'pointer');
               if (this.options.popupFontSizePx != null) {
                 $('.ace_autocomplete').css('font-size', this.options.popupFontSizePx + 'px');
+              }
+              if (this.options.popupLineHeightPx != null) {
+                $('.ace_autocomplete').css('line-height', this.options.popupLineHeightPx + 'px');
               }
               if (this.options.popupWidthPx != null) {
                 $('.ace_autocomplete').css('width', this.options.popupWidthPx + 'px');
