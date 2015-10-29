@@ -53,6 +53,10 @@ module.exports = (options) ->
         type: 'number'
         required: false
         description: 'Font-size in pixels for popup text'
+      popupLineHeightPx:
+        type: 'number'
+        required: false
+        description: 'Line-height in pixels for popup text'
       popupWidthPx:
         type: 'number'
         required: false
