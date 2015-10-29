@@ -627,7 +627,7 @@ module.exports.fuzziac = fuzziac;
             if (!caption) {
               continue;
             }
-            _ref4 = scrubSnippet(s.content, caption, line, prefix, pos, lang, autoLineEndings), snippet = _ref4[0], fuzzScore = _ref4[1];
+            _ref4 = scrubSnippet(s.content, caption, line, prefix, pos, lang, autoLineEndings, s.captureReturn), snippet = _ref4[0], fuzzScore = _ref4[1];
             _results.push(completions.push({
               content: s.content,
               caption: caption,
@@ -658,8 +658,8 @@ module.exports.fuzziac = fuzziac;
     return text.substring(start, end);
   };
 
-  scrubSnippet = function(snippet, caption, line, input, pos, lang, autoLineEndings) {
-    var captionStart, fuzzScore, linePrefix, linePrefixIndex, lineSuffix, prefixStart, snippetLines, snippetPrefix, snippetPrefixIndex, snippetSuffix;
+  scrubSnippet = function(snippet, caption, line, input, pos, lang, autoLineEndings, captureReturn) {
+    var captionStart, fuzzScore, linePrefix, linePrefixIndex, lineSuffix, prefixStart, snippetLines, snippetPrefix, snippetPrefixIndex, snippetSuffix, toLinePrefix;
     fuzzScore = 0.1;
     if (prefixStart = snippet.toLowerCase().indexOf(input.toLowerCase()) > -1) {
       snippetLines = (snippet.match(lineBreak) || []).length;
@@ -695,12 +695,17 @@ module.exports.fuzziac = fuzziac;
         snippet = snippet.slice(0, snippet.length - lineSuffix.length);
       }
       if (lineSuffix.length === 0 && /^\s*$/.test(line.slice(pos.column))) {
-        if (linePrefixIndex < 0 || linePrefixIndex >= 0 && !/[\(\)]/.test(line.substring(0, linePrefixIndex + 1)) && !/^[ \t]*(?:if |elif )/.test(line.substring(0, linePrefixIndex + 1))) {
+        toLinePrefix = line.substring(0, linePrefixIndex);
+        if (linePrefixIndex < 0 || linePrefixIndex >= 0 && !/[\(\)]/.test(toLinePrefix) && !/^[ \t]*(?:if\b|elif\b)/.test(toLinePrefix)) {
           if (snippetLines === 0 && autoLineEndings[lang]) {
             snippet += autoLineEndings[lang];
           }
           if (snippetLines === 0 && !/\$\{/.test(snippet)) {
             snippet += "\n";
+          }
+          if (captureReturn && /^\s*$/.test(toLinePrefix)) {
+            snippet = captureReturn + linePrefix + snippet;
+            console.log("REFOREGED", snippet);
           }
         }
       }
