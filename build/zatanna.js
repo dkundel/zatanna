@@ -705,7 +705,6 @@ module.exports.fuzziac = fuzziac;
           }
           if (captureReturn && /^\s*$/.test(toLinePrefix)) {
             snippet = captureReturn + linePrefix + snippet;
-            console.log("REFOREGED", snippet);
           }
         }
       }
@@ -719,7 +718,6 @@ module.exports.fuzziac = fuzziac;
     if (caption === input) {
       fuzzScore = 10;
     }
-    console.log(snippet, input, fuzzScore);
     return [snippet, fuzzScore];
   };
 
