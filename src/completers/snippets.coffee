@@ -206,7 +206,6 @@ scrubSnippet = (snippet, caption, line, input, pos, lang, autoLineEndings, captu
         
         if captureReturn and /^\s*$/.test(toLinePrefix)
           snippet = captureReturn + linePrefix + snippet
-          console.log "REFOREGED", snippet
 
     # console.log "Zatanna snippetPrefix=#{snippetPrefix} linePrefix=#{linePrefix} snippetSuffix=#{snippetSuffix} lineSuffix=#{lineSuffix} snippet=#{snippet} score=#{fuzzScore}"
   else
@@ -221,7 +220,5 @@ scrubSnippet = (snippet, caption, line, input, pos, lang, autoLineEndings, captu
   # Exact match is really good.
   fuzzScore = 10 if caption == input
   
-  console.log snippet, input, fuzzScore
-
   [snippet, fuzzScore]
 
