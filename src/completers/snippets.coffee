@@ -62,11 +62,11 @@ module.exports = (SnippetManager, autoLineEndings) ->
               originalPrefix = ''
             snippetStart = cursor.column - originalPrefix.length
             # console.log "Zatanna originalPrefix='#{originalPrefix}' snippetStart=#{snippetStart}"
-            
+
             if snippetStart > 0 and snippetStart <= line.length
               extraIndex = snippetStart - 1
               # console.log "Zatanna prev char='#{line[extraIndex]}'"
-              
+
               if line[extraIndex] is '.'
                 # Fuzzy string match previous word before '.', and remove if a match to beginning of snippet
                 originalObject = originalCompletion.content.substring(0, originalCompletion.content.indexOf('.'))
@@ -121,7 +121,7 @@ module.exports = (SnippetManager, autoLineEndings) ->
         caption  = s.name or s.tabTrigger
         continue unless caption
         [snippet, fuzzScore] = scrubSnippet s.content, caption, line, prefix, pos, lang, autoLineEndings, s.captureReturn
-        completions.push 
+        completions.push
           content: s.content  # Used internally by Zatanna, not by ace autocomplete
           caption: caption
           snippet: snippet
@@ -131,7 +131,7 @@ module.exports = (SnippetManager, autoLineEndings) ->
     # console.log 'Zatanna snippet completions', completions
     @completions = completions
     callback null, completions
-    
+
   # TODO: This shim doesn't work because our version of ace isn't updated to this change:
   # TODO: https://github.com/ajaxorg/ace/commit/7b01a4273e91985c9177f53d238d6b83fe99dc56
   # TODO: But, if it was we could use this and pass a 'completer: @' property for each completion
@@ -183,7 +183,7 @@ scrubSnippet = (snippet, caption, line, input, pos, lang, autoLineEndings, captu
     # Don't eat existing matched parentheses
     # console.log "Zatanna checking parentheses lineSuffix=#{lineSuffix} pos.column=#{pos.column} input.length=#{input.length}, prevChar=#{line[pos.column - input.length - 1]} line.length=#{line.length} nextChar=#{line[pos.column]}"
     if pos.column - input.length >= 0 and line[pos.column - input.length - 1] is '(' and pos.column < line.length and line[pos.column] is ')' and lineSuffix is ')'
-      lineSuffix = '' 
+      lineSuffix = ''
 
     # Score match before updating snippet
     fuzzScore += score snippet, linePrefix + input + lineSuffix
@@ -203,7 +203,7 @@ scrubSnippet = (snippet, caption, line, input, pos, lang, autoLineEndings, captu
       if linePrefixIndex < 0 or linePrefixIndex >= 0 and not /[\(\)]/.test(toLinePrefix) and not /^[ \t]*(?:if\b|elif\b)/.test(toLinePrefix)
         snippet += autoLineEndings[lang] if snippetLines is 0 and autoLineEndings[lang]
         snippet += "\n" if snippetLines is 0 and not /\$\{/.test(snippet)
-        
+
         if captureReturn and /^\s*$/.test(toLinePrefix)
           snippet = captureReturn + linePrefix + snippet
 
@@ -211,14 +211,17 @@ scrubSnippet = (snippet, caption, line, input, pos, lang, autoLineEndings, captu
   else
     fuzzScore += score snippet, input
 
+  startsWith = (string, searchString, position) ->
+    position = position or 0
+    return string.substr(position, searchString.length) is searchString
+
   # Prefixing is twice as good as fuzzy mathing?
-  fuzzScore *= 2 if caption.startsWith(input)
-  
+  fuzzScore *= 2 if startsWith(caption, input)
+
   # All things equal, a shorter snippet is better
   fuzzScore -= caption.length / 500
 
   # Exact match is really good.
   fuzzScore = 10 if caption == input
-  
-  [snippet, fuzzScore]
 
+  [snippet, fuzzScore]

@@ -659,7 +659,7 @@ module.exports.fuzziac = fuzziac;
   };
 
   scrubSnippet = function(snippet, caption, line, input, pos, lang, autoLineEndings, captureReturn) {
-    var captionStart, fuzzScore, linePrefix, linePrefixIndex, lineSuffix, prefixStart, snippetLines, snippetPrefix, snippetPrefixIndex, snippetSuffix, toLinePrefix;
+    var captionStart, fuzzScore, linePrefix, linePrefixIndex, lineSuffix, prefixStart, snippetLines, snippetPrefix, snippetPrefixIndex, snippetSuffix, startsWith, toLinePrefix;
     fuzzScore = 0.1;
     if (prefixStart = snippet.toLowerCase().indexOf(input.toLowerCase()) > -1) {
       snippetLines = (snippet.match(lineBreak) || []).length;
@@ -711,7 +711,11 @@ module.exports.fuzziac = fuzziac;
     } else {
       fuzzScore += score(snippet, input);
     }
-    if (caption.startsWith(input)) {
+    startsWith = function(string, searchString, position) {
+      position = position || 0;
+      return string.substr(position, searchString.length) === searchString;
+    };
+    if (startsWith(caption, input)) {
       fuzzScore *= 2;
     }
     fuzzScore -= caption.length / 500;
@@ -1782,8 +1786,8 @@ var substr = 'ab'.substr(-1) === 'b'
     }
 ;
 
-}).call(this,require("JkpR2F"))
-},{"JkpR2F":12}],12:[function(require,module,exports){
+}).call(this,require("g5I+bs"))
+},{"g5I+bs":12}],12:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
