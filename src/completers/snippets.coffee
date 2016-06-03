@@ -100,7 +100,9 @@ module.exports = (SnippetManager, autoLineEndings) ->
 
     #Remove anything that looks like an identifier after the completion
     afterIndex = cursor.column
-    afterIndex++ while afterIndex < line.length and /[a-zA-Z_0-9()]/.test(line[afterIndex])
+    trailingText = line.substring afterIndex
+    match = trailingText.match /^[a-zA-Z_0-9]*(\(\s*\))?/
+    afterIndex += match[0].length if match
     afterRange = new Range cursor.row, cursor.column, cursor.row, afterIndex
     editor.session.remove afterRange
 

@@ -525,7 +525,7 @@ module.exports.fuzziac = fuzziac;
     });
     baseInsertSnippet = SnippetManager.insertSnippet;
     SnippetManager.insertSnippet = function(editor, snippet) {
-      var afterIndex, afterRange, completer, completion, cursor, extraEndLength, extraIndex, finalScore, fuzzer, lang, line, originalCompletion, originalObject, originalPrefix, prevObject, prevObjectIndex, prevWord, prevWordIndex, range, snippetIndex, snippetStart, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3;
+      var afterIndex, afterRange, completer, completion, cursor, extraEndLength, extraIndex, finalScore, fuzzer, lang, line, match, originalCompletion, originalObject, originalPrefix, prevObject, prevObjectIndex, prevWord, prevWordIndex, range, snippetIndex, snippetStart, trailingText, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3;
       cursor = editor.getCursorPosition();
       line = editor.session.getLine(cursor.row);
       if (cursor.column > 0) {
@@ -606,8 +606,10 @@ module.exports.fuzziac = fuzziac;
         }
       }
       afterIndex = cursor.column;
-      while (afterIndex < line.length && /[a-zA-Z_0-9()]/.test(line[afterIndex])) {
-        afterIndex++;
+      trailingText = line.substring(afterIndex);
+      match = trailingText.match(/^[a-zA-Z_0-9]*(\(\s*\))?/);
+      if (match) {
+        afterIndex += match[0].length;
       }
       afterRange = new Range(cursor.row, cursor.column, cursor.row, afterIndex);
       editor.session.remove(afterRange);
@@ -1795,8 +1797,8 @@ var substr = 'ab'.substr(-1) === 'b'
     }
 ;
 
-}).call(this,require("g5I+bs"))
-},{"g5I+bs":12}],12:[function(require,module,exports){
+}).call(this,require("JkpR2F"))
+},{"JkpR2F":12}],12:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
