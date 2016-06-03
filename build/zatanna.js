@@ -525,10 +525,10 @@ module.exports.fuzziac = fuzziac;
     });
     baseInsertSnippet = SnippetManager.insertSnippet;
     SnippetManager.insertSnippet = function(editor, snippet) {
-      var completer, completion, cursor, extraEndLength, extraIndex, finalScore, fuzzer, lang, line, originalCompletion, originalObject, originalPrefix, prevObject, prevObjectIndex, prevWord, prevWordIndex, range, snippetIndex, snippetStart, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3;
+      var afterIndex, afterRange, completer, completion, cursor, extraEndLength, extraIndex, finalScore, fuzzer, lang, line, originalCompletion, originalObject, originalPrefix, prevObject, prevObjectIndex, prevWord, prevWordIndex, range, snippetIndex, snippetStart, _i, _j, _len, _len1, _ref, _ref1, _ref2, _ref3;
       cursor = editor.getCursorPosition();
+      line = editor.session.getLine(cursor.row);
       if (cursor.column > 0) {
-        line = editor.session.getLine(cursor.row);
         prevWord = util.retrievePrecedingIdentifier(line, cursor.column - 1, identifierRegex);
         if (prevWord.length > 0) {
           prevWordIndex = snippet.toLowerCase().indexOf(prevWord.toLowerCase());
@@ -579,12 +579,15 @@ module.exports.fuzziac = fuzziac;
                     }
                     prevObject = line.substring(prevObjectIndex, extraIndex);
                     fuzzer = new Fuzziac.fuzziac(originalObject);
+                    finalScore = 0;
                     if (fuzzer) {
                       finalScore = fuzzer.score(prevObject);
-                      if (finalScore > 0.5) {
-                        range = new Range(cursor.row, prevObjectIndex, cursor.row, snippetStart);
-                        editor.session.remove(range);
-                      }
+                    }
+                    if (finalScore > 0.5) {
+                      range = new Range(cursor.row, prevObjectIndex, cursor.row, snippetStart);
+                      editor.session.remove(range);
+                    } else if (/^[^.]+\./.test(snippet)) {
+                      snippet = snippet.replace(/^[^.]+\./, '');
                     }
                   }
                 } else if (/\w/.test(line[extraIndex])) {
@@ -602,6 +605,12 @@ module.exports.fuzziac = fuzziac;
           }
         }
       }
+      afterIndex = cursor.column;
+      while (afterIndex < line.length && /[a-zA-Z_0-9()]/.test(line[afterIndex])) {
+        afterIndex++;
+      }
+      afterRange = new Range(cursor.row, cursor.column, cursor.row, afterIndex);
+      editor.session.remove(afterRange);
       return baseInsertSnippet.call(this, editor, snippet);
     };
     return {

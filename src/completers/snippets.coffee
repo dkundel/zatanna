@@ -26,8 +26,8 @@ module.exports = (SnippetManager, autoLineEndings) ->
     # TODO: This function is a mess
     # TODO: Can some of this nonsense be done upstream in scrubSnippet?
     cursor = editor.getCursorPosition()
+    line = editor.session.getLine cursor.row
     if cursor.column > 0
-      line = editor.session.getLine cursor.row
       prevWord = util.retrievePrecedingIdentifier line, cursor.column - 1, identifierRegex
       if prevWord.length > 0
         # Remove previous word if it's at the beginning of the snippet
@@ -79,12 +79,17 @@ module.exports = (SnippetManager, autoLineEndings) ->
                   prevObject = line.substring prevObjectIndex, extraIndex
 
                   fuzzer = new Fuzziac.fuzziac originalObject
+                  finalScore = 0
                   if fuzzer
                     finalScore = fuzzer.score prevObject
-                    # console.log "Zatanna originalObject='#{originalObject}' prevObject='#{prevObject}'", finalScore
-                    if finalScore > 0.5
-                      range = new Range cursor.row, prevObjectIndex, cursor.row, snippetStart
-                      editor.session.remove range
+
+                  # console.log "Zatanna originalObject='#{originalObject}' prevObject='#{prevObject}'", finalScore
+                  if finalScore > 0.5
+                    range = new Range cursor.row, prevObjectIndex, cursor.row, snippetStart
+                    editor.session.remove range
+                  else if /^[^.]+\./.test snippet
+                    # Remove the first part of the snippet, and use whats there.
+                    snippet = snippet.replace /^[^.]+\./, ''
 
               else if /\w/.test(line[extraIndex])
                 # Remove any alphanumeric characters on this line immediately before prefix
@@ -92,6 +97,12 @@ module.exports = (SnippetManager, autoLineEndings) ->
                 extraIndex++ if extraIndex < 0 or not /\w/.test(line[extraIndex])
                 range = new Range cursor.row, extraIndex, cursor.row, snippetStart
                 editor.session.remove range
+
+    #Remove anything that looks like an identifier after the completion
+    afterIndex = cursor.column
+    afterIndex++ while afterIndex < line.length and /[a-zA-Z_0-9()]/.test(line[afterIndex])
+    afterRange = new Range cursor.row, cursor.column, cursor.row, afterIndex
+    editor.session.remove afterRange
 
     baseInsertSnippet.call @, editor, snippet
 
