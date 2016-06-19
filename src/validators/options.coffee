@@ -1,18 +1,26 @@
-tv4 = require('tv4').tv4
+tv4 = require('tv4/tv4').tv4
 
 module.exports = (options) ->
   tv4.validateMultiple options,
     "type": "object"
     additionalProperties: false
     properties:
+      autoLineEndings:
+        type: 'object'
+        required: false
+        description: "Mapping ace mode language to line endings to automatically insert.  E.g. javacscript: ';'"
       basic:
         type: 'boolean'
         required: false
         description: 'Basic autocompletion based on keywords used in code'
-      snippets:
+      snippets: # TODO: remove this sometime after 10/23/14
         type: 'boolean'
         required: false
         description: 'Offers code snippets for autocomplete'
+      snippetsLangDefaults:
+        type: 'boolean'
+        required: false
+        description: 'If true, use language default snippets'
       liveCompletion:
         type: 'boolean'
         required: false
@@ -41,3 +49,15 @@ module.exports = (options) ->
             type: 'boolean'
             required: false
             description: 'Show text content suggestions in autocomplete popup'
+      popupFontSizePx:
+        type: 'number'
+        required: false
+        description: 'Font-size in pixels for popup text'
+      popupLineHeightPx:
+        type: 'number'
+        required: false
+        description: 'Line-height in pixels for popup text'
+      popupWidthPx:
+        type: 'number'
+        required: false
+        description: 'Width in pixels for popup'
